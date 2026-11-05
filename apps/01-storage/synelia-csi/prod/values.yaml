@@ -1,0 +1,156 @@
+---
+# Official truenas/truenas-csi v1.4.0 — production storage provider.
+# Existing bound PVs retain their immutable CSI identities. StorageClass
+# names expose stable platform capabilities, not backend implementation.
+fullnameOverride: synelia-prod-csi
+driverName: synelia.prod.csi.truenas.io
+kubeletDir: /var/lib/kubelet
+logLevel: 2
+
+truenas:
+  # TrueNAS API is on WSS/8443; HTTPS/443 is Traefik, not the appliance API.
+  url: wss://nas.truxonline.com:8443/api/current
+  defaultPool: tank
+  nfsServer: nas.truxonline.com
+  iscsiPortal: "192.168.111.69:3260"
+  existingSecret: synelia-prod-csi-credentials
+  existingSecretKey: api-key
+  insecureSkipTLS: false
+
+image:
+  driver:
+    repository: ghcr.io/truenas/truenas-csi
+    tag: v1.4.0
+    pullPolicy: IfNotPresent
+  csiProvisioner:
+    tag: v6.1.1
+  csiAttacher:
+    tag: v4.11.0
+  csiSnapshotter:
+    tag: v8.5.0
+  csiResizer:
+    tag: v2.1.0
+  nodeDriverRegistrar:
+    tag: v2.16.0
+  livenessProbe:
+    tag: v2.18.0
+
+controller:
+  replicas: 1
+  timeout: 60s
+  defaultFSType: ext4
+  priorityClassName: system-cluster-critical
+  podLabels:
+    vixens.io/backup-profile: relaxed
+    vixens.io/single-replica: "true"
+  podAnnotations:
+    vixens.io/explicitly-allow-root: "true"
+    vixens.io/no-long-connections: "true"
+    vixens.io/nometrics: "true"
+    vixens.io/service-binding: "false"
+    vixens.io/sizing-rationale: "Official production CSI controller; six containers"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 384Mi
+
+node:
+  priorityClassName: system-node-critical
+  podLabels:
+    vixens.io/single-replica: "true"
+  podAnnotations:
+    vixens.io/explicitly-allow-root: "true"
+    vixens.io/no-long-connections: "true"
+    vixens.io/nometrics: "true"
+    vixens.io/service-binding: "false"
+    vixens.io/sizing-rationale: "Privileged Talos CSI node"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 384Mi
+
+# Snapshot support remains separately gated until its physical TrueNAS 27 proof.
+volumeSnapshotClass:
+  enabled: false
+
+# Public storage contract (ADR-043). All names are non-default and deliberately
+# provider-neutral: applications select access/reclaim guarantees, not TrueNAS,
+# iSCSI, NFS, a ZFS path or a historical driver identity. Retain is mandatory for
+# durable state; Delete is reserved for explicitly disposable data. The official
+# driver parents are the canonical Vixens ZFS parents; CSI provisions its
+# own per-claim children without adopting independently managed volumes.
+storageClasses:
+  - name: storage-rwx-retain
+    isDefault: false
+    reclaimPolicy: Retain
+    volumeBindingMode: Immediate
+    allowVolumeExpansion: true
+    mountOptions:
+      - nfsvers=4.1
+    parameters:
+      protocol: nfs
+      pool: tank
+      datasetPath: k8s/vixens/nfs
+      compression: LZ4
+  - name: storage-rwx-delete
+    isDefault: false
+    reclaimPolicy: Delete
+    volumeBindingMode: Immediate
+    allowVolumeExpansion: true
+    mountOptions:
+      - nfsvers=4.1
+    parameters:
+      protocol: nfs
+      pool: tank
+      datasetPath: k8s/vixens/nfs
+      compression: LZ4
+  - name: storage-rwo-retain
+    isDefault: false
+    reclaimPolicy: Retain
+    volumeBindingMode: WaitForFirstConsumer
+    allowVolumeExpansion: true
+    parameters:
+      protocol: iscsi
+      pool: tank
+      datasetPath: k8s/vixens/iscsi
+      fsType: ext4
+      compression: LZ4
+  - name: storage-rwo-delete
+    isDefault: false
+    reclaimPolicy: Delete
+    volumeBindingMode: WaitForFirstConsumer
+    allowVolumeExpansion: true
+    parameters:
+      protocol: iscsi
+      pool: tank
+      datasetPath: k8s/vixens/iscsi
+      fsType: ext4
+      compression: LZ4
+  - name: storage-rwo-xfs-retain
+    isDefault: false
+    reclaimPolicy: Retain
+    volumeBindingMode: WaitForFirstConsumer
+    allowVolumeExpansion: true
+    parameters:
+      protocol: iscsi
+      pool: tank
+      datasetPath: k8s/vixens/iscsi
+      fsType: xfs
+      compression: LZ4
+  - name: storage-rwo-xfs-delete
+    isDefault: false
+    reclaimPolicy: Delete
+    volumeBindingMode: WaitForFirstConsumer
+    allowVolumeExpansion: true
+    parameters:
+      protocol: iscsi
+      pool: tank
+      datasetPath: k8s/vixens/iscsi
+      fsType: xfs
+      compression: LZ4

@@ -1,0 +1,166 @@
+---
+# CrowdSec Helm values - common (all environments)
+# Chart: crowdsecurity/crowdsec
+# Docs: https://docs.crowdsec.net/docs/getting_started/install_crowdsec_service
+
+container_runtime: containerd
+
+image:
+  repository: crowdsecurity/crowdsec
+  tag: ""  # uses chart AppVersion
+  pullPolicy: IfNotPresent
+
+# ============================================================================
+# LAPI (Local API) - decision engine
+# ============================================================================
+lapi:
+  enabled: true
+  replicas: 1
+
+  env:
+    - name: BOUNCER_KEY_traefik
+      valueFrom:
+        secretKeyRef:
+          name: crowdsec-secrets
+          key: CROWDSEC_BOUNCER_KEY
+    - name: ENROLL_KEY
+      valueFrom:
+        secretKeyRef:
+          name: crowdsec-secrets
+          key: ENROLL_KEY
+    - name: ENROLL_INSTANCE_NAME
+      value: "vixens-k8s"
+    - name: CROWDSEC_DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: crowdsec-secrets
+          key: CROWDSEC_DB_PASSWORD
+    # Note: CUSTOM_HOSTNAME is already set by the chart template (metadata.name).
+    # Do NOT override via lapi.env — chart merges by name, causing value+valueFrom conflict.
+
+  persistentVolume:
+    data:
+      enabled: false
+    # Persist /etc/crowdsec config (online_api_credentials.yaml, local_api_credentials.yaml)
+    # Without this, the LAPI re-registers with CAPI on every restart → duplicate machine entries
+    config:
+      enabled: true
+      storageClassName: storage-rwo-retain
+      accessModes:
+        - ReadWriteOnce
+      size: 1Gi
+
+  # Recreate: avoid overlap between old/new pods both registering simultaneously
+  strategy:
+    type: Recreate
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  priorityClassName: vixens-medium
+
+  podLabels:
+    vixens.io/sizing.crowdsec-lapi: V-micro
+    vixens.io/priority-class: vixens-medium
+
+  podAnnotations:
+    vixens.io/service-binding: "false"
+    vixens.io/no-long-connections: "true"
+    vixens.io/sizing-rationale: "V-micro: ~100-150Mi LAPI + PostgreSQL backend"
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "6060"
+    prometheus.io/path: "/metrics"
+
+# ============================================================================
+# Agent (log acquisition + detection)
+# ============================================================================
+agent:
+  enabled: true
+
+  acquisition:
+    - namespace: traefik
+      podName: traefik-*
+      program: traefik
+
+  env:
+    - name: COLLECTIONS
+      value: "crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/base-http-scenarios"
+    # Stable machine name based on node name: prevents new entry on every DaemonSet pod restart
+    - name: NODE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+    - name: CUSTOM_HOSTNAME
+      value: "crowdsec-agent-$(NODE_NAME)"
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+  startupProbe:
+    httpGet:
+      path: /metrics
+      port: metrics
+      scheme: HTTP
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 5
+    failureThreshold: 90
+
+  priorityClassName: vixens-medium
+
+  podLabels:
+    vixens.io/sizing.crowdsec-agent: V-micro
+    vixens.io/priority-class: vixens-medium
+
+  podAnnotations:
+    vixens.io/service-binding: "false"
+    vixens.io/no-long-connections: "true"
+    vixens.io/sizing-rationale: "V-micro: hub init (50+ collections) needs 512Mi; steady-state ~80Mi"
+
+# ============================================================================
+# LAPI config
+# ============================================================================
+config:
+  config.yaml.local: |
+    db_config:
+      type: postgresql
+      user: crowdsec
+      password: ${CROWDSEC_DB_PASSWORD}
+      db_name: crowdsec
+      host: postgresql-shared-rw.databases.svc.cluster.local
+      port: 5432
+      sslmode: disable
+    api:
+      server:
+        auto_registration:
+          enabled: true
+          token: ${REGISTRATION_TOKEN}
+          allowed_ranges:
+            - "10.244.0.0/16"
+
+  profiles.yaml: |
+    name: default_ip_remediation
+    filters:
+      - Alert.Remediation == true && Alert.GetScope() == "Ip"
+    decisions:
+      - type: ban
+        duration: 4h
+    on_success: break
+    ---
+    name: default_range_remediation
+    filters:
+      - Alert.Remediation == true && Alert.GetScope() == "Range"
+    decisions:
+      - type: ban
+        duration: 4h
+    on_success: break
