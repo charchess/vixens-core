@@ -1,0 +1,41 @@
+---
+# velero server + node-agent (label: app.kubernetes.io/name: velero)
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: velero
+  namespace: velero
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: velero
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: monitoring
+  egress:
+    # velero → world (NAS/MinIO at nas.truxonline.com:30157 for backup storage)
+    - toEntities:
+        - world
+    # velero → kube-apiserver (watch/restore cluster resources)
+    - toEntities:
+        - kube-apiserver
+---
+# kopia maintenance jobs (label: velero.io/repo-name — NOT app.kubernetes.io/name: velero)
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: velero-kopia-jobs
+  namespace: velero
+spec:
+  endpointSelector:
+    matchExpressions:
+      - key: velero.io/repo-name
+        operator: Exists
+  egress:
+    # kopia jobs → world (NAS/MinIO for backup repository maintenance)
+    - toEntities:
+        - world
+    # kopia jobs → kube-apiserver
+    - toEntities:
+        - kube-apiserver

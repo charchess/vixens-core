@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cmd-params-cm
+data:
+  # Run server without TLS - Traefik handles TLS termination
+  server.insecure: "true"
+  # Disable authentication for anonymous admin access
+  server.disable.auth: "true"

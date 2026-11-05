@@ -1,0 +1,321 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: argocd
+resources:
+  - ../../base
+  - ingress.yaml
+
+patches:
+  - path: resources-patch.yaml
+  - path: patches/argocd-params.yaml
+  - path: patches/argocd-cm-ignore-differences.yaml
+  - path: patches/crds-replace-sync.yaml
+  - path: patches/repo-server-copyutil-fix.yaml
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: argocd-redis
+    path: patches/redis-resources-json.yaml
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: argocd-redis
+    path: patches/redis-probes-json.yaml
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: argocd-dex-server
+    path: patches/dex-run-as-user-json.yaml
+  # QW3: priorityClassName vixens-critical for all ArgoCD workloads
+  - patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: placeholder
+      spec:
+        template:
+          spec:
+            priorityClassName: vixens-critical
+    target:
+      kind: Deployment
+  - patch: |
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: placeholder
+      spec:
+        template:
+          spec:
+            priorityClassName: vixens-critical
+    target:
+      kind: StatefulSet
+  # fast-start: ArgoCD components start quickly, no startup probe needed
+  - patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: placeholder
+      spec:
+        template:
+          metadata:
+            annotations:
+              vixens.io/fast-start: "true"
+              vixens.io/service-binding: "false"
+    target:
+      kind: Deployment
+  - patch: |
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: placeholder
+      spec:
+        template:
+          metadata:
+            annotations:
+              vixens.io/fast-start: "true"
+              vixens.io/service-binding: "false"
+    target:
+      kind: StatefulSet
+
+  # Prometheus metrics annotations — each ArgoCD component exposes metrics on a dedicated port
+  - patch: |
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: argocd-application-controller
+      spec:
+        template:
+          metadata:
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "8082"
+              prometheus.io/path: "/metrics"
+    target:
+      kind: StatefulSet
+      name: argocd-application-controller
+  - patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: argocd-applicationset-controller
+      spec:
+        template:
+          metadata:
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "8080"
+              prometheus.io/path: "/metrics"
+    target:
+      kind: Deployment
+      name: argocd-applicationset-controller
+  - patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: argocd-dex-server
+      spec:
+        template:
+          metadata:
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "5558"
+              prometheus.io/path: "/metrics"
+    target:
+      kind: Deployment
+      name: argocd-dex-server
+  - patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: argocd-notifications-controller
+      spec:
+        template:
+          metadata:
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "9001"
+              prometheus.io/path: "/metrics"
+    target:
+      kind: Deployment
+      name: argocd-notifications-controller
+  - patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: argocd-repo-server
+      spec:
+        template:
+          metadata:
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "8084"
+              prometheus.io/path: "/metrics"
+    target:
+      kind: Deployment
+      name: argocd-repo-server
+  - patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: argocd-server
+      spec:
+        template:
+          metadata:
+            annotations:
+              prometheus.io/scrape: "true"
+              prometheus.io/port: "8083"
+              prometheus.io/path: "/metrics"
+    target:
+      kind: Deployment
+      name: argocd-server
+  - patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: argocd-redis
+      spec:
+        template:
+          metadata:
+            annotations:
+              vixens.io/nometrics: "true"
+    target:
+      kind: Deployment
+      name: argocd-redis
+
+  # Sizing labels for Bronze apps (applicationset, dex, notifications)
+  # ArgoCD applicationset-controller - manages ApplicationSets
+  - patch: |-
+      - op: add
+        path: /metadata/labels/vixens.io~1sizing-v2
+        value: "true"
+    target:
+      kind: Deployment
+      name: argocd-applicationset-controller
+  - patch: |-
+      - op: add
+        path: /spec/template/metadata/labels/vixens.io~1sizing.argocd-applicationset-controller
+        value: G-small
+    target:
+      kind: Deployment
+      name: argocd-applicationset-controller
+  # ArgoCD dex-server - OIDC provider (auth disabled in prod)
+  - patch: |-
+      - op: add
+        path: /metadata/labels/vixens.io~1sizing-v2
+        value: "true"
+    target:
+      kind: Deployment
+      name: argocd-dex-server
+  - patch: |-
+      - op: add
+        path: /spec/template/metadata/labels/vixens.io~1sizing.dex
+        value: G-nano
+    target:
+      kind: Deployment
+      name: argocd-dex-server
+  # ArgoCD notifications-controller - Slack/Discord notifications
+  - patch: |-
+      - op: add
+        path: /metadata/labels/vixens.io~1sizing-v2
+        value: "true"
+    target:
+      kind: Deployment
+      name: argocd-notifications-controller
+  - patch: |-
+      - op: add
+        path: /spec/template/metadata/labels/vixens.io~1sizing.argocd-notifications-controller
+        value: G-nano
+    target:
+      kind: Deployment
+      name: argocd-notifications-controller
+  # Gold maturity: sync-wave + goldilocks on all ArgoCD workloads (Deployment metadata, not pod template)
+  - patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: placeholder
+        annotations:
+          argocd.argoproj.io/sync-wave: "5"
+          goldilocks.fairwinds.com/enabled: "true"
+          vpa.kubernetes.io/updateMode: "Off"
+    target:
+      kind: Deployment
+  - patch: |
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: placeholder
+        annotations:
+          argocd.argoproj.io/sync-wave: "5"
+          goldilocks.fairwinds.com/enabled: "true"
+          vpa.kubernetes.io/updateMode: "Off"
+    target:
+      kind: StatefulSet
+  # Graceful shutdown bypass — pure controllers, no user connections
+  - patch: |-
+      - op: add
+        path: /spec/template/metadata/annotations/vixens.io~1no-long-connections
+        value: "true"
+    target:
+      kind: Deployment
+      name: argocd-applicationset-controller
+  - patch: |-
+      - op: add
+        path: /spec/template/metadata/annotations/vixens.io~1no-long-connections
+        value: "true"
+    target:
+      kind: Deployment
+      name: argocd-notifications-controller
+  # Graceful shutdown preStop — network-facing components with active connections
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/lifecycle
+        value:
+          preStop:
+            exec:
+              command: ["sleep", "5"]
+    target:
+      kind: Deployment
+      name: argocd-server
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/lifecycle
+        value:
+          preStop:
+            exec:
+              command: ["sleep", "5"]
+    target:
+      kind: Deployment
+      name: argocd-repo-server
+  - patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/lifecycle
+        value:
+          preStop:
+            exec:
+              command: ["sleep", "5"]
+    target:
+      kind: Deployment
+      name: argocd-dex-server
+  # argocd-redis graceful shutdown bypass — internal Redis backing store, no user connections
+  - patch: |-
+      - op: add
+        path: /spec/template/metadata/annotations/vixens.io~1no-long-connections
+        value: "true"
+    target:
+      kind: Deployment
+      name: argocd-redis
+  # argocd-redis sizing label
+  - patch: |-
+      - op: add
+        path: /spec/template/metadata/labels/vixens.io~1sizing.redis
+        value: "V-micro"
+    target:
+      kind: Deployment
+      name: argocd-redis
+
+components:
