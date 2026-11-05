@@ -1,7 +1,7 @@
 ---
+# Reloader is the first live Core canary in the K3d dev lab.  Unlike
+# ordinary dev workloads, it must run to prove the Argo → Core path.
 apiVersion: kustomize.config.k8s.io/v1beta1
-components:
-- ../../../../_shared/components/dev-hibernate
 kind: Kustomization
 resources:
-- ../../base
+  - ../../base
