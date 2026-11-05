@@ -4,4 +4,19 @@ kind: Kustomization
 namespace: argocd
 resources:
   - bootstrap-marker.yaml
-  - apps/core-reloader.yaml
+  - apps/snapshot-controller.yaml
+  - apps/priority-classes.yaml
+  - apps/external-secrets.yaml
+  - apps/shared-namespaces.yaml
+  - apps/openbao-secrets.yaml
+  - apps/cilium-lb.yaml
+  - apps/nfs-storage.yaml
+  - apps/cert-manager.yaml
+  - apps/cert-manager-secrets.yaml
+  - apps/traefik.yaml
+  - apps/local-path-provisioner.yaml
+  - apps/synelia-csi-umi.yaml
+  - apps/cert-manager-webhook-gandi.yaml
+  - apps/traefik-middlewares.yaml
+  - apps/cert-manager-config.yaml
+  - apps/argocd.yaml

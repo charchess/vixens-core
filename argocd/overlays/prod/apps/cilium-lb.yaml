@@ -1,0 +1,20 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: core-cilium-lb
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2" # Deploy before cilium-config (wave -1)
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/charchess/vixens-core.git
+    targetRevision: prod-stable
+    path: apps/00-infra/cilium-lb/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    # Cilium CRDs are cluster-scoped, but convention is kube-system
+    namespace: kube-system
