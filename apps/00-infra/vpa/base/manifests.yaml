@@ -644,7 +644,7 @@ spec:
         app.kubernetes.io/instance: vpa
         app.kubernetes.io/component: admission-controller
       annotations:
-        checksum/tls-secret: 8e2a5c9025ad79f41086f48a53133b4bab29d9b25421218f12ff73a960b14a1e
+        checksum/tls-secret: 8e2a5c9025ad79f41086f48a53133b4bab29d9b25421218f12ff73a960b14a1e # gitleaks:allow -- non-secret checksum/internal endpoint
     spec:
       enableServiceLinks: false
       serviceAccountName: vpa-vertical-pod-autoscaler-admission-controller
