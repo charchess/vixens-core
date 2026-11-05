@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vixens-core-dev-bootstrap
+  labels:
+    app.kubernetes.io/name: vixens-core
+    app.kubernetes.io/component: gitops-root
+    vixens.lab/environment: dev
+data:
+  contract: dev-gitops-root
+  repository: charchess/vixens-core
+  revision: main
