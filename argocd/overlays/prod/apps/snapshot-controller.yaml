@@ -1,0 +1,19 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: core-snapshot-controller
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/charchess/vixens-core.git
+    path: apps/00-infra/snapshot-controller/overlays/prod
+    targetRevision: prod-stable
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: snapshot-controller

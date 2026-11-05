@@ -4,9 +4,8 @@ These source blocks were copied from `charchess/vixens` at commit `c6aafee2c7a6c
 
 ## Safety boundary
 
-- This repository is **not** an active Argo CD source.
-- No Argo CD Application, root registration, BOM pin, promotion reference, or live Kubernetes object is changed by this staging commit.
-- This copy does not move data, PVCs, PVs, database state, or secrets.
+- This repository now carries Core-only Argo CD compositions for development and production, but every child Application is manual-sync and uses a separate `core-` identity.
+- No root registration, promotion reference, live Kubernetes object, data, PVC, PV, database state or secret is moved by this source migration.
 - A future live source handoff must follow the `argocd-stateful-ownership-transfer` procedure: one authority, no prune, no PVC recreation, exact render comparison, and live identity proof.
 
 ## Source blocks
