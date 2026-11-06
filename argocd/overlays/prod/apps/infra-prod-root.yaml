@@ -13,7 +13,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/charchess/vixens-infra.git
-    targetRevision: a21d45477acfbd07edf525bfa59a110c081b5fe8
+    targetRevision: 7157a4933a7625ecbcc6d26885ea973c02d5b049
     path: argocd/overlays/prod
   destination:
     server: https://kubernetes.default.svc
