@@ -1,0 +1,20 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: perso-root
+  namespace: argocd
+  labels:
+    vixens.io/domain: core
+    vixens.io/component: domain-root
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/charchess/vixens-perso.git
+    targetRevision: 234926cf8411d0cf39f91b51f5d1d70fc443aca8
+    path: argocd/overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd

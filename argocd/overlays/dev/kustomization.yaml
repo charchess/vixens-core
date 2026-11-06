@@ -20,3 +20,6 @@ resources:
   - apps/traefik-middlewares.yaml
   - apps/cert-manager-config.yaml
   - apps/argocd.yaml
+  - apps/infra-root.yaml
+  - apps/perso-root.yaml
+  - apps/fabric-root.yaml
