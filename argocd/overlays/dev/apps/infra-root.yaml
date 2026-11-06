@@ -1,0 +1,20 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-root
+  namespace: argocd
+  labels:
+    vixens.io/domain: core
+    vixens.io/component: domain-root
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/charchess/vixens-infra.git
+    targetRevision: 95170aa235cc3b3d7ae35b8b4008ace2d14b8683
+    path: argocd/overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
