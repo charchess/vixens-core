@@ -21,3 +21,4 @@ resources:
   - apps/argocd.yaml
   - apps/coredns.yaml
   - apps/metrics-server.yaml
+  - apps/infra-prod-root.yaml
