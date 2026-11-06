@@ -4,8 +4,8 @@ kind: Kustomization
 resources:
   - ../../base
 patches:
-  # UMI has a dedicated out-of-band bootstrap identity, independent of prod.
-  # The Secret must exist in the UMI external-secrets namespace before activation.
+  # Dev uses the dedicated out-of-band bootstrap identity, independent of prod.
+  # Terraform creates external-secrets/openbao-token before this Store is activated.
   # Never place token bytes in Git or reuse the prod/Infra administrative token.
   - target:
       kind: ClusterSecretStore
@@ -13,4 +13,4 @@ patches:
     patch: |-
       - op: replace
         path: /spec/provider/vault/auth/tokenSecretRef/name
-        value: openbao-token-umi
+        value: openbao-token
