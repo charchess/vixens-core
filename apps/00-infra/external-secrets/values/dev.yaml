@@ -1,5 +1,10 @@
 ---
 installCRDs: true
+# Two ESO CRDs exceed Kubernetes' client-side apply annotation limit.
+# Scope replace semantics to CRDs; deployments, RBAC and Secrets remain applied normally.
+crds:
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
 replicaCount: 1
 resources:
   requests:
