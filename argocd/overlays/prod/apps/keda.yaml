@@ -15,6 +15,7 @@ spec:
       chart: keda
       targetRevision: 2.18.3
       helm:
+        releaseName: keda
         valueFiles:
           - $values/apps/00-infra/keda/values/common.yaml
     - repoURL: https://github.com/charchess/vixens-core.git
