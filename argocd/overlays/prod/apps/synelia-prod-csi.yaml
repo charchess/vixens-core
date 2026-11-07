@@ -29,3 +29,15 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: synelia-prod-csi
+  # Kyverno omits the upstream chart's strict Directory assertion only for the
+  # named iscsi-dir volume; Talos cannot reliably satisfy that hostPath check.
+  ignoreDifferences:
+    - group: apps
+      kind: DaemonSet
+      namespace: synelia-prod-csi
+      name: synelia-prod-csi-node
+      jqPathExpressions:
+        - .spec.template.spec.volumes[] | select(.name == "iscsi-dir").hostPath.type
+  syncPolicy:
+    syncOptions:
+      - RespectIgnoreDifferences=true
