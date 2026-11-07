@@ -1,0 +1,57 @@
+name: Tag dev candidate
+
+on:
+  workflow_run:
+    workflows: [Validate & Security]
+    branches: [main]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  tag-dev-candidate:
+    name: Create immutable dev candidate
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Create immutable candidate and move dev-latest
+        env:
+          CANDIDATE_SHA: ${{ github.event.workflow_run.head_sha }}
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ -n "$PR_NUMBER" ]; then
+            suffix="$PR_NUMBER"
+          else
+            suffix="$(git rev-parse --short=7 "$CANDIDATE_SHA")"
+          fi
+          candidate_tag="dev-v$(date -u +%Y.%m).${suffix}"
+
+          if git ls-remote --exit-code --refs origin "refs/tags/$candidate_tag" >/dev/null; then
+            git fetch --force origin "refs/tags/$candidate_tag:refs/tags/$candidate_tag"
+            existing_sha="$(git rev-parse "$candidate_tag^{}")"
+            test "$existing_sha" = "$CANDIDATE_SHA"
+          else
+            git tag -a "$candidate_tag" "$CANDIDATE_SHA" -m "Core dev candidate $candidate_tag"
+            git push origin "refs/tags/$candidate_tag"
+          fi
+
+          git tag -fa dev-latest "$CANDIDATE_SHA" -m "Core development latest"
+          git push --force origin refs/tags/dev-latest
+
+          remote_candidate="$(git ls-remote --tags origin "refs/tags/$candidate_tag^{}" | while read -r sha _; do printf '%s' "$sha"; break; done)"
+          remote_latest="$(git ls-remote --tags origin "refs/tags/dev-latest^{}" | while read -r sha _; do printf '%s' "$sha"; break; done)"
+          test "$remote_candidate" = "$CANDIDATE_SHA"
+          test "$remote_latest" = "$CANDIDATE_SHA"
+          printf 'Created %s and moved dev-latest to %s\n' "$candidate_tag" "$CANDIDATE_SHA"
