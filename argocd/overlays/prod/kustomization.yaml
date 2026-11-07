@@ -21,4 +21,9 @@ resources:
   - apps/argocd.yaml
   - apps/coredns.yaml
   - apps/metrics-server.yaml
+  - apps/external-dns-gandi.yaml
+  - apps/external-dns-unifi.yaml
+  - apps/keda.yaml
+  - apps/keda-http-addon.yaml
+  - apps/vpa.yaml
   - apps/infra-prod-root.yaml
