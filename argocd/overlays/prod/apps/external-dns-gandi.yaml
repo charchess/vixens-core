@@ -18,6 +18,7 @@ spec:
       chart: external-dns
       targetRevision: 6.14.3
       helm:
+        releaseName: external-dns-gandi
         valueFiles:
           - $values/apps/40-network/external-dns-gandi/values/prod.yaml
     - repoURL: https://github.com/charchess/vixens-core.git
