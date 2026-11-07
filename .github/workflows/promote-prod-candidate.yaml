@@ -1,0 +1,114 @@
+name: Promote prod candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate:
+        description: Exact immutable dev-vYYYY.MM.<PR-or-short-sha> tag to promote
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  promote-prod:
+    name: Promote exact dev candidate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate candidate and successful main validation
+        env:
+          CANDIDATE: ${{ inputs.candidate }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          case "$CANDIDATE" in
+            dev-v[0-9][0-9][0-9][0-9].0[1-9].*) ;;
+            dev-v[0-9][0-9][0-9][0-9].1[0-2].*) ;;
+            *) echo "candidate must match dev-vYYYY.MM.<PR-or-short-sha>" >&2; exit 1 ;;
+          esac
+          if ! python3 - "$CANDIDATE" <<'PYTHON'
+          import re
+          import sys
+          raise SystemExit(0 if re.fullmatch(r"dev-v\d{4}\.(?:0[1-9]|1[0-2])\.(?:[1-9]\d*|[0-9a-f]{7,40})", sys.argv[1]) else 1)
+          PYTHON
+          then
+            echo "candidate must be an exact dev-vYYYY.MM.<PR-or-short-sha> tag" >&2
+            exit 1
+          fi
+
+          git fetch --force --tags origin
+          git show-ref --verify --quiet "refs/tags/$CANDIDATE"
+          candidate_sha="$(git rev-parse "$CANDIDATE^{}")"
+          git fetch origin main
+          git merge-base --is-ancestor "$candidate_sha" origin/main
+
+          export CANDIDATE_SHA="$candidate_sha"
+          python3 - <<'PYTHON'
+          import json
+          import os
+          import urllib.parse
+          import urllib.request
+
+          query = urllib.parse.urlencode({
+              "branch": "main",
+              "event": "push",
+              "status": "success",
+              "head_sha": os.environ["CANDIDATE_SHA"],
+              "per_page": "100",
+          })
+          url = f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/actions/workflows/validate.yaml/runs?{query}"
+          request = urllib.request.Request(url, headers={
+              "Accept": "application/vnd.github+json",
+              "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
+              "User-Agent": "vixens-core-release-channel",
+          })
+          with urllib.request.urlopen(request) as response:
+              runs = json.load(response)["workflow_runs"]
+          valid = any(
+              run["name"] == "Validate & Security"
+              and run["head_branch"] == "main"
+              and run["event"] == "push"
+              and run["head_sha"] == os.environ["CANDIDATE_SHA"]
+              and run["conclusion"] == "success"
+              for run in runs
+          )
+          if not valid:
+              raise SystemExit("no successful Validate & Security push run on main exists for this candidate")
+          PYTHON
+          printf '%s\n' "$candidate_sha" > "$RUNNER_TEMP/candidate-sha"
+
+      - name: Create immutable prod tag then move prod-stable
+        env:
+          CANDIDATE: ${{ inputs.candidate }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          candidate_sha="$(cat "$RUNNER_TEMP/candidate-sha")"
+          prod_tag="prod-v${CANDIDATE#dev-v}"
+
+          if git ls-remote --exit-code --refs origin "refs/tags/$prod_tag" >/dev/null; then
+            git fetch --force origin "refs/tags/$prod_tag:refs/tags/$prod_tag"
+            existing_sha="$(git rev-parse "$prod_tag^{}")"
+            test "$existing_sha" = "$candidate_sha"
+          else
+            git tag -a "$prod_tag" "$candidate_sha" -m "Core production release $prod_tag"
+            git push origin "refs/tags/$prod_tag"
+          fi
+
+          git tag -fa prod-stable "$candidate_sha" -m "Core production stable"
+          git push --force origin refs/tags/prod-stable
+
+          remote_prod="$(git ls-remote --tags origin "refs/tags/$prod_tag^{}" | while read -r sha _; do printf '%s' "$sha"; break; done)"
+          remote_stable="$(git ls-remote --tags origin "refs/tags/prod-stable^{}" | while read -r sha _; do printf '%s' "$sha"; break; done)"
+          test "$remote_prod" = "$candidate_sha"
+          test "$remote_stable" = "$candidate_sha"
+          printf 'Created %s and moved prod-stable to %s\n' "$prod_tag" "$candidate_sha"
