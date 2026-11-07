@@ -42,6 +42,7 @@ resources:
   - mutate-security-context.yaml
   - mutate-sidecar-probes.yaml
   - mutate-termination-message-policy.yaml
+  - mutate-truenas-csi-talos-hostpath.yaml
   - policy-exception-argocd.yaml
   - policy-exception-cainjector.yaml
   - policy-exception-csi-probes.yaml

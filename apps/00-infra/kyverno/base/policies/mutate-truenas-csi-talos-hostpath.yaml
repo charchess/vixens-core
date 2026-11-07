@@ -1,0 +1,49 @@
+---
+# The upstream TrueNAS CSI chart v1.4.0 hard-codes hostPath.type=Directory for
+# /etc/iscsi. Talos exposes the iscsi-tools extension through a mount namespace
+# which kubelet can reject under that strict type assertion. Limit this mutation
+# to the one upstream DaemonSet and one named volume.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: mutate-truenas-csi-talos-hostpath
+  annotations:
+    policies.kyverno.io/title: Keep TrueNAS CSI iSCSI hostPath Talos-compatible
+    policies.kyverno.io/category: Storage
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      Omits the strict hostPath type assertion only for the official TrueNAS CSI
+      node DaemonSet's iscsi-dir volume. This preserves Talos-compatible iSCSI
+      registration without mutating any other workload.
+spec:
+  background: false
+  rules:
+    - name: omit-iscsi-dir-hostpath-type
+      match:
+        any:
+          - resources:
+              kinds:
+                - DaemonSet
+              namespaces:
+                - synelia-prod-csi
+              names:
+                - synelia-prod-csi-node
+              operations:
+                - CREATE
+                - UPDATE
+      mutate:
+        foreach:
+          - list: request.object.spec.template.spec.volumes
+            preconditions:
+              all:
+                - key: "{{ element.name }}"
+                  operator: Equals
+                  value: iscsi-dir
+            patchStrategicMerge:
+              spec:
+                template:
+                  spec:
+                    volumes:
+                      - (name): iscsi-dir
+                        hostPath:
+                          type: ""
