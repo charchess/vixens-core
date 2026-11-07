@@ -16,6 +16,16 @@ GitHub Issue → branch → Pull Request → required CI → merge to main
 
 This contract does not activate, bypass, or replace any separate Argo CD handoff, orchestrator BOM approval, rollout, or physical validation. A successful tag promotion is repository release metadata only; deployment and platform-health proof remain separate gates.
 
+## Approved Infra production-root handoff (#55)
+
+`argocd/overlays/prod/apps/infra-prod-root.yaml` is the approved first
+component handoff. It follows the repository-local
+`charchess/vixens-infra:prod-stable` channel rather than an immutable SHA.
+The tag must be read back before promotion; the child `argocd/overlays/prod`
+catalog must be rendered and compared before changing this root. This handoff
+does not authorize a Fabric or Perso production root, legacy-owner retirement,
+stateful migration, or a broad Argo sync.
+
 ## Required review questions
 
 1. Does the change stay within this repository's responsibility?

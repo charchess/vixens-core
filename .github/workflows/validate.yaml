@@ -122,6 +122,14 @@ jobs:
       - name: Assert release workflow safety invariants
         run: bash tests/test_component_release_channel.sh
 
+  infra-prod-root-channel-contract:
+    name: Infra prod root channel contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert Infra production root follows its local channel
+        run: bash tests/test_infra_prod_root_channel.sh
+
   validation-summary:
     name: Validation Summary
     if: always()
@@ -133,6 +141,7 @@ jobs:
       - kustomize-render
       - scope-boundary
       - release-channel-contract
+      - infra-prod-root-channel-contract
 
     runs-on: ubuntu-latest
     steps:
