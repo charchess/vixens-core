@@ -13,7 +13,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/charchess/vixens-perso.git
-    targetRevision: 234926cf8411d0cf39f91b51f5d1d70fc443aca8
+    targetRevision: main
     path: argocd/overlays/dev
   destination:
     server: https://kubernetes.default.svc
