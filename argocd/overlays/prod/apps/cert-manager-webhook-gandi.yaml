@@ -22,6 +22,7 @@ spec:
       chart: cert-manager-webhook-gandi
       targetRevision: v0.5.2
       helm:
+        releaseName: cert-manager-webhook-gandi
         valueFiles:
           - $values/apps/00-infra/cert-manager-webhook-gandi/values/common.yaml
           - $values/apps/00-infra/cert-manager-webhook-gandi/values/prod.yaml

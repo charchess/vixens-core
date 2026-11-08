@@ -22,6 +22,7 @@ spec:
       chart: cert-manager
       targetRevision: v1.14.4
       helm:
+        releaseName: cert-manager
         valueFiles:
           - $values/apps/00-infra/cert-manager/values/common.yaml
           - $values/apps/00-infra/cert-manager/values/prod.yaml
