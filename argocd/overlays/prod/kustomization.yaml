@@ -26,7 +26,9 @@ resources:
   - apps/keda.yaml
   - apps/keda-http-addon.yaml
   - apps/vpa.yaml
+  - apps/cloudnative-pg-crds.yaml
   - apps/cloudnative-pg.yaml
+  - apps/plugin-barman-cloud.yaml
   - apps/grafana.yaml
   - apps/kyverno.yaml
   - apps/victoria-metrics.yaml
