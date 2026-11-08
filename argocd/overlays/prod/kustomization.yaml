@@ -35,3 +35,4 @@ resources:
   - apps/infra-prod-root.yaml
   - apps/fabric-prod-root.yaml
   - apps/perso-prod-root.yaml
+  - apps/vixens-app-of-apps.yaml
