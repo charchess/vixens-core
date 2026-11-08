@@ -31,3 +31,5 @@ resources:
   - apps/kyverno.yaml
   - apps/victoria-metrics.yaml
   - apps/infra-prod-root.yaml
+  - apps/fabric-prod-root.yaml
+  - apps/perso-prod-root.yaml
