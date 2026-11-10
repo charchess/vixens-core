@@ -43,9 +43,15 @@ if ! command -v "$KUSTOMIZE_BIN" >/dev/null 2>&1; then
 fi
 
 fixture_dir="$ROOT/scripts/validation/fixtures/kustomize-red-green/$FIXTURE"
+red_tmp=""
+if [ "$FIXTURE" = "red" ]; then
+  red_tmp=$(mktemp -d)
+  cp "$fixture_dir/fixture-kustomization.yaml" "$red_tmp/kustomization.yaml"
+  fixture_dir="$red_tmp"
+fi
 workflow="$ROOT/.github/workflows/validate.yaml"
 output=$(mktemp)
-trap 'rm -f "$output"' EXIT
+trap 'rm -f "$output"; if [ -n "${red_tmp:-}" ]; then rm -f "$red_tmp/kustomization.yaml"; rmdir "$red_tmp"; fi' EXIT
 
 if "$KUSTOMIZE_BIN" build "$fixture_dir" >"$output" 2>&1; then
   if [ "$FIXTURE" = "red" ]; then
