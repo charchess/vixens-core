@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kustomize-red-green-harness
+  namespace: default
+data:
+  contract: green
