@@ -8,18 +8,17 @@ CI routing. The workflow remains the executable merge gate.
 ## Baseline
 
 The baseline was captured from `main` at SHA
-`814709b58b2ce406f0e4d3dcaef2eeaff2e4c7fd`.
+`27658a97ffbcce4277b9509369f7b66355a43783`.
 
-- GitHub Actions run: [`42410490999`](https://github.com/charchess/vixens/actions/runs/42410490999)
-- Job: `Kustomize Build & K8s Validation`
+- GitHub Actions run: [`42531058219`](https://github.com/charchess/vixens-core/actions/runs/42531058219)
+- Job: `Kustomize render`
 - Observed run conclusion: `success`
 
 The harness proves both ends of the local contract against that workflow shape:
 
 1. the `green` fixture renders successfully with Kustomize;
 2. the deliberately malformed `red` fixture exits non-zero; and
-3. the workflow source contains the current-shell accumulator (`done <<<
-   "$OVERLAYS"`), records `FAILED=1`, and exits when it is set.
+3. the workflow source contains the fail-closed renderer (`kustomize build --enable-helm`), rejects unexpected render errors, and exits non-zero.
 
 It is not a replacement for a GitHub Actions execution, kubeconform, PDB selector
 validation, or a PR-level fast/full routing test.
@@ -41,7 +40,7 @@ expected`. The unit test treats that non-zero exit as the required result.
 
 | Condition | Classification | Expected result | Evidence |
 |---|---|---|---|
-| Application-overlay Kustomize build failure | Blocking | `Kustomize Build & K8s Validation` fails | RED fixture plus `FAILED=1` accumulator assertion |
+| Application-overlay Kustomize build failure | Blocking | `Kustomize render` fails | RED fixture plus `FAILED=1` accumulator assertion |
 | Application-overlay kubeconform failure | Blocking | validation function returns non-zero; aggregate job fails | workflow contract |
 | Application-overlay PDB selector mismatch | Blocking | validation function returns non-zero; aggregate job fails | workflow contract |
 | Invalid rendered ArgoCD domain label | Blocking | validation function returns non-zero; aggregate job fails | workflow contract |

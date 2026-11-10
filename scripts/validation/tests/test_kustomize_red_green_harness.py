@@ -39,12 +39,16 @@ class KustomizeRedGreenHarnessTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("RED: Kustomize build failed as expected", result.stdout)
 
+    def test_no_compiled_python_is_versioned(self):
+        tracked = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
+        self.assertFalse([path for path in tracked if path.endswith(".pyc") or "__pycache__/" in path])
+
     def test_documentation_records_reproducible_baseline_and_matrix(self):
         content = DOCUMENTATION.read_text(encoding="utf-8")
         for required in (
-            "814709b58b2ce406f0e4d3dcaef2eeaff2e4c7fd",
-            "42410490999",
-            "Kustomize Build & K8s Validation",
+            "27658a97ffbcce4277b9509369f7b66355a43783",
+            "42531058219",
+            "Kustomize render",
             "Blocking / non-blocking matrix",
             "Kustomize build failure",
             "0 rendered resources",
