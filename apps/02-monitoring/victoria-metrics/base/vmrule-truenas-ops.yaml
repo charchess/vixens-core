@@ -12,9 +12,19 @@ spec:
           expr: |
             (up{job="truenas-ops"} == 1) and on()
             (
-              count(truenas_gfs_task_enabled{job="truenas-ops"}) != 8
-              or count(truenas_gfs_latest_snapshot_timestamp{job="truenas-ops"}) != 8
-              or count(truenas_zfs_snapshot_held_bytes{job="truenas-ops"}) != 2
+              absent(truenas_ops_scrape_success{job="truenas-ops"})
+              or absent(truenas_zfs_snapshot_held_bytes{job="truenas-ops",root="tank/k8s/vixens"})
+              or absent(truenas_zfs_snapshot_held_bytes{job="truenas-ops",root="tank/data/shared"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/k8s/vixens",tier="hourly"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/k8s/vixens",tier="daily"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/k8s/vixens",tier="weekly"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/k8s/vixens",tier="monthly"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/data/shared",tier="hourly"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/data/shared",tier="daily"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/data/shared",tier="weekly"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/data/shared",tier="monthly"})
+              or absent(truenas_gfs_latest_snapshot_timestamp{job="truenas-ops",root="tank/k8s/vixens",tier="hourly"})
+              or absent(truenas_gfs_latest_snapshot_timestamp{job="truenas-ops",root="tank/data/shared",tier="hourly"})
               or absent(truenas_nfs_service_up{job="truenas-ops"})
               or absent(truenas_iscsi_service_up{job="truenas-ops"})
             )
@@ -23,7 +33,7 @@ spec:
             severity: critical
           annotations:
             summary: "TrueNAS exporter metrics contract incomplete"
-            description: "The exporter is reachable but one or more required GFS, ZFS, NFS or iSCSI metric series are absent or incomplete."
+            description: "The exporter is reachable but a required named metric series is absent."
         - alert: TrueNASExporterDown
           expr: up{job="truenas-ops"} == 0
           for: 5m
