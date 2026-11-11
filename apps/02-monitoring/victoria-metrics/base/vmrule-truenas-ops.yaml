@@ -8,6 +8,22 @@ spec:
   groups:
     - name: truenas-ops
       rules:
+        - alert: TrueNASMetricsContractIncomplete
+          expr: |
+            (up{job="truenas-ops"} == 1) and on()
+            (
+              count(truenas_gfs_task_enabled{job="truenas-ops"}) != 8
+              or count(truenas_gfs_latest_snapshot_timestamp{job="truenas-ops"}) != 8
+              or count(truenas_zfs_snapshot_held_bytes{job="truenas-ops"}) != 2
+              or absent(truenas_nfs_service_up{job="truenas-ops"})
+              or absent(truenas_iscsi_service_up{job="truenas-ops"})
+            )
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "TrueNAS exporter metrics contract incomplete"
+            description: "The exporter is reachable but one or more required GFS, ZFS, NFS or iSCSI metric series are absent or incomplete."
         - alert: TrueNASExporterDown
           expr: up{job="truenas-ops"} == 0
           for: 5m
