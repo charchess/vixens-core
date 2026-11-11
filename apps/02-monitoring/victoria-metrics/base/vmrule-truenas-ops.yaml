@@ -1,0 +1,74 @@
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: truenas-ops-alerts
+  namespace: monitoring
+spec:
+  groups:
+    - name: truenas-ops
+      rules:
+        - alert: TrueNASMetricsContractIncomplete
+          expr: |
+            (up{job="truenas-ops"} == 1) and on()
+            (
+              absent(truenas_ops_scrape_success{job="truenas-ops"})
+              or absent(truenas_zfs_snapshot_held_bytes{job="truenas-ops",root="tank/k8s/vixens"})
+              or absent(truenas_zfs_snapshot_held_bytes{job="truenas-ops",root="tank/data/shared"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/k8s/vixens",tier="hourly"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/k8s/vixens",tier="daily"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/k8s/vixens",tier="weekly"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/k8s/vixens",tier="monthly"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/data/shared",tier="hourly"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/data/shared",tier="daily"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/data/shared",tier="weekly"})
+              or absent(truenas_gfs_task_enabled{job="truenas-ops",root="tank/data/shared",tier="monthly"})
+              or absent(truenas_gfs_latest_snapshot_timestamp{job="truenas-ops",root="tank/k8s/vixens",tier="hourly"})
+              or absent(truenas_gfs_latest_snapshot_timestamp{job="truenas-ops",root="tank/k8s/vixens",tier="daily"})
+              or absent(truenas_gfs_latest_snapshot_timestamp{job="truenas-ops",root="tank/k8s/vixens",tier="weekly"})
+              or absent(truenas_gfs_latest_snapshot_timestamp{job="truenas-ops",root="tank/k8s/vixens",tier="monthly"})
+              or absent(truenas_gfs_latest_snapshot_timestamp{job="truenas-ops",root="tank/data/shared",tier="hourly"})
+              or absent(truenas_gfs_latest_snapshot_timestamp{job="truenas-ops",root="tank/data/shared",tier="daily"})
+              or absent(truenas_gfs_latest_snapshot_timestamp{job="truenas-ops",root="tank/data/shared",tier="weekly"})
+              or absent(truenas_gfs_latest_snapshot_timestamp{job="truenas-ops",root="tank/data/shared",tier="monthly"})
+              or absent(truenas_nfs_service_up{job="truenas-ops"})
+              or absent(truenas_iscsi_service_up{job="truenas-ops"})
+            )
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "TrueNAS exporter metrics contract incomplete"
+            description: "The exporter is reachable but a required named metric series is absent."
+        - alert: TrueNASExporterDown
+          expr: up{job="truenas-ops"} == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "TrueNAS operations exporter unavailable"
+            description: "VictoriaMetrics cannot scrape the local TrueNAS operations exporter for 5 minutes."
+        - alert: TrueNASGFSHourlySnapshotStale
+          expr: time() - truenas_gfs_latest_snapshot_timestamp{tier="hourly"} > 7200
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "TrueNAS hourly GFS snapshot stale"
+            description: "No hourly GFS snapshot has been observed for {{ $labels.root }} in over two hours."
+        - alert: TrueNASGFSTaskDisabled
+          expr: truenas_gfs_task_enabled == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "TrueNAS GFS task disabled"
+            description: "The {{ $labels.tier }} GFS task for {{ $labels.root }} is disabled or absent."
+        - alert: TrueNASStorageServiceDown
+          expr: truenas_nfs_service_up == 0 or truenas_iscsi_service_up == 0
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "TrueNAS storage service unavailable"
+            description: "NFS or iSCSI has been unavailable on TrueNAS for over three minutes."

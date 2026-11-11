@@ -20,6 +20,13 @@ spec:
     # vmagent → all cluster pods (scrapes metrics from every namespace)
     - toEntities:
         - cluster
+    # vmagent → TrueNAS local operations exporter.
+    - toCIDR:
+        - 192.168.111.69/32
+      toPorts:
+        - ports:
+            - port: "9766"
+              protocol: TCP
     # vmagent → kubelet (port 10250) + node-exporter hostNetwork (port 9100) on all nodes
     - toEntities:
         - host
