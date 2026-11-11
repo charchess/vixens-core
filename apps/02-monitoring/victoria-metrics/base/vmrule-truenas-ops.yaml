@@ -1,0 +1,42 @@
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: truenas-ops-alerts
+  namespace: monitoring
+spec:
+  groups:
+    - name: truenas-ops
+      rules:
+        - alert: TrueNASExporterDown
+          expr: up{job="truenas-ops"} == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "TrueNAS operations exporter unavailable"
+            description: "VictoriaMetrics cannot scrape the local TrueNAS operations exporter for 5 minutes."
+        - alert: TrueNASGFSHourlySnapshotStale
+          expr: time() - truenas_gfs_latest_snapshot_timestamp{tier="hourly"} > 7200
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "TrueNAS hourly GFS snapshot stale"
+            description: "No hourly GFS snapshot has been observed for {{ $labels.root }} in over two hours."
+        - alert: TrueNASGFSTaskDisabled
+          expr: truenas_gfs_task_enabled == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "TrueNAS GFS task disabled"
+            description: "The {{ $labels.tier }} GFS task for {{ $labels.root }} is disabled or absent."
+        - alert: TrueNASStorageServiceDown
+          expr: truenas_nfs_service_up == 0 or truenas_iscsi_service_up == 0
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "TrueNAS storage service unavailable"
+            description: "NFS or iSCSI has been unavailable on TrueNAS for over three minutes."

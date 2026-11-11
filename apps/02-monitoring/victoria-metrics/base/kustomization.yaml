@@ -6,6 +6,8 @@ resources:
   - alertmanager-external-secret.yaml
   - vmrule-pvc-pending.yaml
   - vmrule-gmail-import.yaml
+  - vmrule-truenas-ops.yaml
+  - vmscrape-truenas-ops.yaml
   - cilium-networkpolicy.yaml
   - servicemonitor-hubble.yaml
 

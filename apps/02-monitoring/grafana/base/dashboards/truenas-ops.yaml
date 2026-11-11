@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-truenas-ops
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  truenas-ops.json: |
+    {
+      "title": "TrueNAS — GFS & Storage",
+      "uid": "truenas-ops-vixens",
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "1m",
+      "time": {"from": "now-24h", "to": "now"},
+      "tags": ["truenas", "zfs", "gfs", "storage"],
+      "templating": {"list": []},
+      "panels": [
+        {"id":1,"type":"stat","title":"Exporter","gridPos":{"x":0,"y":0,"w":4,"h":4},"options":{"reduceOptions":{"calcs":["lastNotNull"]},"colorMode":"background"},"fieldConfig":{"defaults":{"mappings":[{"type":"value","options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}}}]}},"targets":[{"expr":"truenas_ops_scrape_success{job=\"truenas-ops\"}","refId":"A"}]},
+        {"id":2,"type":"stat","title":"NFS","gridPos":{"x":4,"y":0,"w":4,"h":4},"options":{"reduceOptions":{"calcs":["lastNotNull"]},"colorMode":"background"},"fieldConfig":{"defaults":{"mappings":[{"type":"value","options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}}}]}},"targets":[{"expr":"truenas_nfs_service_up{job=\"truenas-ops\"}","refId":"A"}]},
+        {"id":3,"type":"stat","title":"iSCSI","gridPos":{"x":8,"y":0,"w":4,"h":4},"options":{"reduceOptions":{"calcs":["lastNotNull"]},"colorMode":"background"},"fieldConfig":{"defaults":{"mappings":[{"type":"value","options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}}}]}},"targets":[{"expr":"truenas_iscsi_service_up{job=\"truenas-ops\"}","refId":"A"}]},
+        {"id":4,"type":"gauge","title":"ZFS used","gridPos":{"x":12,"y":0,"w":12,"h":4},"options":{"reduceOptions":{"calcs":["lastNotNull"]}},"fieldConfig":{"defaults":{"unit":"percentunit","min":0,"max":1,"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":0.8},{"color":"red","value":0.9}]}}},"targets":[{"expr":"truenas_zfs_used_ratio{job=\"truenas-ops\"}","legendFormat":"{{root}}","refId":"A"}]},
+        {"id":5,"type":"timeseries","title":"Snapshot-held space","gridPos":{"x":0,"y":4,"w":12,"h":8},"fieldConfig":{"defaults":{"unit":"bytes","custom":{"fillOpacity":15}}},"targets":[{"expr":"truenas_zfs_snapshot_held_bytes{job=\"truenas-ops\"}","legendFormat":"{{root}}","refId":"A"}]},
+        {"id":6,"type":"timeseries","title":"ZFS capacity","gridPos":{"x":12,"y":4,"w":12,"h":8},"fieldConfig":{"defaults":{"unit":"bytes","custom":{"fillOpacity":10}}},"targets":[{"expr":"truenas_zfs_used_bytes{job=\"truenas-ops\"}","legendFormat":"{{root}} used","refId":"A"},{"expr":"truenas_zfs_available_bytes{job=\"truenas-ops\"}","legendFormat":"{{root}} available","refId":"B"}]},
+        {"id":7,"type":"table","title":"GFS task state","gridPos":{"x":0,"y":12,"w":12,"h":8},"targets":[{"expr":"truenas_gfs_task_enabled{job=\"truenas-ops\"}","format":"table","instant":true,"refId":"A"}]},
+        {"id":8,"type":"timeseries","title":"Age of newest GFS snapshot","gridPos":{"x":12,"y":12,"w":12,"h":8},"fieldConfig":{"defaults":{"unit":"s"}},"targets":[{"expr":"time() - truenas_gfs_latest_snapshot_timestamp{job=\"truenas-ops\"}","legendFormat":"{{root}} {{tier}}","refId":"A"}]}
+      ]
+    }
