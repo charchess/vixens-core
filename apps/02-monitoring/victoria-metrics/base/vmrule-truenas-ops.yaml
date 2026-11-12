@@ -72,3 +72,43 @@ spec:
           annotations:
             summary: "TrueNAS storage service unavailable"
             description: "NFS or iSCSI has been unavailable on TrueNAS for over three minutes."
+        - alert: TrueNASScrutinyDown
+          expr: truenas_scrutiny_up{job="truenas-ops"} == 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "TrueNAS Scrutiny unavailable"
+            description: "The local Scrutiny SMART summary API has been unavailable for ten minutes."
+        - alert: TrueNASSmartCollectionStale
+          expr: time() - truenas_scrutiny_last_collection_timestamp{job="truenas-ops"} > 93600
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "TrueNAS SMART collection stale"
+            description: "Scrutiny has not collected SMART data for disk {{ $labels.disk }} in over 26 hours."
+        - alert: TrueNASSmartTemperatureHigh
+          expr: truenas_scrutiny_temperature_celsius{job="truenas-ops"} >= 45
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "TrueNAS disk temperature high"
+            description: "Disk {{ $labels.disk }} is at {{ $value }} °C."
+        - alert: TrueNASSmartTemperatureCritical
+          expr: truenas_scrutiny_temperature_celsius{job="truenas-ops"} >= 50
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "TrueNAS disk temperature critical"
+            description: "Disk {{ $labels.disk }} is at {{ $value }} °C."
+        - alert: TrueNASScrutinyDiskDegraded
+          expr: truenas_scrutiny_disk_status{job="truenas-ops"} != 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "TrueNAS disk reported degraded by Scrutiny"
+            description: "Scrutiny reported non-zero device status for {{ $labels.disk }}."
