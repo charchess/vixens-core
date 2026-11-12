@@ -19,3 +19,11 @@ The same local exporter reads Scrutiny only through its loopback summary API. It
 - `truenas_scrutiny_temperature_celsius{disk,protocol}`
 - `truenas_scrutiny_power_on_hours{disk,protocol}`
 - `truenas_scrutiny_last_collection_timestamp{disk,protocol}`
+
+### Physical SMART slot summary
+
+`truenas_scrutiny_slot_state{bus,slot}` publishes the fixed appliance layout: three NVMe slots and eight SATA bays. Values are `0` healthy, `1` empty, and `2` degraded. This keeps empty SATA bays visible without emitting a serial, WWN, or a synthetic disk identity.
+
+### GFS newest-snapshot age
+
+The dashboard intentionally filters `truenas_gfs_latest_snapshot_timestamp == 0`: a zero denotes a retention tier with no snapshot yet, not a snapshot created at the Unix epoch.
