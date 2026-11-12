@@ -10,3 +10,12 @@ Required bounded series:
 - `truenas_nfs_service_up`, `truenas_iscsi_service_up` (one each)
 
 The VMRule explicitly alerts when the exporter is up while this bounded contract is incomplete.
+
+## Scrutiny SMART contract
+
+The same local exporter reads Scrutiny only through its loopback summary API. It emits bounded per-disk labels (`disk`, `protocol`) and never exposes serials or WWNs:
+- `truenas_scrutiny_up` and `truenas_scrutiny_disk_count`
+- `truenas_scrutiny_disk_status{disk,protocol}`
+- `truenas_scrutiny_temperature_celsius{disk,protocol}`
+- `truenas_scrutiny_power_on_hours{disk,protocol}`
+- `truenas_scrutiny_last_collection_timestamp{disk,protocol}`

@@ -4,26 +4,139 @@ metadata:
   name: grafana-dashboard-truenas-ops
   namespace: monitoring
   labels:
-    grafana_dashboard: "1"
+    grafana_dashboard: '1'
 data:
-  truenas-ops.json: |
-    {
-      "title": "TrueNAS — GFS & Storage",
-      "uid": "truenas-ops-vixens",
-      "schemaVersion": 38,
-      "version": 1,
-      "refresh": "1m",
-      "time": {"from": "now-24h", "to": "now"},
-      "tags": ["truenas", "zfs", "gfs", "storage"],
-      "templating": {"list": []},
-      "panels": [
-        {"id":1,"type":"stat","title":"Exporter","gridPos":{"x":0,"y":0,"w":4,"h":4},"options":{"reduceOptions":{"calcs":["lastNotNull"]},"colorMode":"background"},"fieldConfig":{"defaults":{"mappings":[{"type":"value","options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}}}]}},"targets":[{"expr":"truenas_ops_scrape_success{job=\"truenas-ops\"}","refId":"A"}]},
-        {"id":2,"type":"stat","title":"NFS","gridPos":{"x":4,"y":0,"w":4,"h":4},"options":{"reduceOptions":{"calcs":["lastNotNull"]},"colorMode":"background"},"fieldConfig":{"defaults":{"mappings":[{"type":"value","options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}}}]}},"targets":[{"expr":"truenas_nfs_service_up{job=\"truenas-ops\"}","refId":"A"}]},
-        {"id":3,"type":"stat","title":"iSCSI","gridPos":{"x":8,"y":0,"w":4,"h":4},"options":{"reduceOptions":{"calcs":["lastNotNull"]},"colorMode":"background"},"fieldConfig":{"defaults":{"mappings":[{"type":"value","options":{"0":{"text":"DOWN","color":"red"},"1":{"text":"UP","color":"green"}}}]}},"targets":[{"expr":"truenas_iscsi_service_up{job=\"truenas-ops\"}","refId":"A"}]},
-        {"id":4,"type":"gauge","title":"ZFS used","gridPos":{"x":12,"y":0,"w":12,"h":4},"options":{"reduceOptions":{"calcs":["lastNotNull"]}},"fieldConfig":{"defaults":{"unit":"percentunit","min":0,"max":1,"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":0.8},{"color":"red","value":0.9}]}}},"targets":[{"expr":"truenas_zfs_used_ratio{job=\"truenas-ops\"}","legendFormat":"{{root}}","refId":"A"}]},
-        {"id":5,"type":"timeseries","title":"Snapshot-held space","gridPos":{"x":0,"y":4,"w":12,"h":8},"fieldConfig":{"defaults":{"unit":"bytes","custom":{"fillOpacity":15}}},"targets":[{"expr":"truenas_zfs_snapshot_held_bytes{job=\"truenas-ops\"}","legendFormat":"{{root}}","refId":"A"}]},
-        {"id":6,"type":"timeseries","title":"ZFS capacity","gridPos":{"x":12,"y":4,"w":12,"h":8},"fieldConfig":{"defaults":{"unit":"bytes","custom":{"fillOpacity":10}}},"targets":[{"expr":"truenas_zfs_used_bytes{job=\"truenas-ops\"}","legendFormat":"{{root}} used","refId":"A"},{"expr":"truenas_zfs_available_bytes{job=\"truenas-ops\"}","legendFormat":"{{root}} available","refId":"B"}]},
-        {"id":7,"type":"table","title":"GFS task state","gridPos":{"x":0,"y":12,"w":12,"h":8},"targets":[{"expr":"truenas_gfs_task_enabled{job=\"truenas-ops\"}","format":"table","instant":true,"refId":"A"}]},
-        {"id":8,"type":"timeseries","title":"Age of newest GFS snapshot","gridPos":{"x":12,"y":12,"w":12,"h":8},"fieldConfig":{"defaults":{"unit":"s"}},"targets":[{"expr":"time() - truenas_gfs_latest_snapshot_timestamp{job=\"truenas-ops\"}","legendFormat":"{{root}} {{tier}}","refId":"A"}]}
-      ]
-    }
+  truenas-ops.json: "{\n  \"title\": \"TrueNAS — Storage, GFS & Disk Health\",\n \
+    \ \"uid\": \"truenas-ops-vixens\",\n  \"schemaVersion\": 38,\n  \"version\": 1,\n\
+    \  \"refresh\": \"1m\",\n  \"time\": {\n    \"from\": \"now-24h\",\n    \"to\"\
+    : \"now\"\n  },\n  \"tags\": [\n    \"truenas\",\n    \"zfs\",\n    \"gfs\",\n\
+    \    \"storage\",\n    \"smart\",\n    \"scrutiny\"\n  ],\n  \"templating\": {\n\
+    \    \"list\": []\n  },\n  \"panels\": [\n    {\n      \"id\": 1,\n      \"type\"\
+    : \"stat\",\n      \"title\": \"Exporter\",\n      \"gridPos\": {\n        \"\
+    x\": 0,\n        \"y\": 0,\n        \"w\": 4,\n        \"h\": 4\n      },\n  \
+    \    \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n  \
+    \          \"lastNotNull\"\n          ]\n        },\n        \"colorMode\": \"\
+    background\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n  \
+    \        \"mappings\": [\n            {\n              \"type\": \"value\",\n\
+    \              \"options\": {\n                \"0\": {\n                  \"\
+    text\": \"DOWN\",\n                  \"color\": \"red\"\n                },\n\
+    \                \"1\": {\n                  \"text\": \"UP\",\n             \
+    \     \"color\": \"green\"\n                }\n              }\n            }\n\
+    \          ]\n        }\n      },\n      \"targets\": [\n        {\n         \
+    \ \"expr\": \"truenas_ops_scrape_success{job=\\\"truenas-ops\\\"}\",\n       \
+    \   \"refId\": \"A\"\n        }\n      ]\n    },\n    {\n      \"id\": 2,\n  \
+    \    \"type\": \"stat\",\n      \"title\": \"NFS\",\n      \"gridPos\": {\n  \
+    \      \"x\": 4,\n        \"y\": 0,\n        \"w\": 4,\n        \"h\": 4\n   \
+    \   },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\"\
+    : [\n            \"lastNotNull\"\n          ]\n        },\n        \"colorMode\"\
+    : \"background\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n\
+    \          \"mappings\": [\n            {\n              \"type\": \"value\",\n\
+    \              \"options\": {\n                \"0\": {\n                  \"\
+    text\": \"DOWN\",\n                  \"color\": \"red\"\n                },\n\
+    \                \"1\": {\n                  \"text\": \"UP\",\n             \
+    \     \"color\": \"green\"\n                }\n              }\n            }\n\
+    \          ]\n        }\n      },\n      \"targets\": [\n        {\n         \
+    \ \"expr\": \"truenas_nfs_service_up{job=\\\"truenas-ops\\\"}\",\n          \"\
+    refId\": \"A\"\n        }\n      ]\n    },\n    {\n      \"id\": 3,\n      \"\
+    type\": \"stat\",\n      \"title\": \"iSCSI\",\n      \"gridPos\": {\n       \
+    \ \"x\": 8,\n        \"y\": 0,\n        \"w\": 4,\n        \"h\": 4\n      },\n\
+    \      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\": [\n\
+    \            \"lastNotNull\"\n          ]\n        },\n        \"colorMode\":\
+    \ \"background\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n\
+    \          \"mappings\": [\n            {\n              \"type\": \"value\",\n\
+    \              \"options\": {\n                \"0\": {\n                  \"\
+    text\": \"DOWN\",\n                  \"color\": \"red\"\n                },\n\
+    \                \"1\": {\n                  \"text\": \"UP\",\n             \
+    \     \"color\": \"green\"\n                }\n              }\n            }\n\
+    \          ]\n        }\n      },\n      \"targets\": [\n        {\n         \
+    \ \"expr\": \"truenas_iscsi_service_up{job=\\\"truenas-ops\\\"}\",\n         \
+    \ \"refId\": \"A\"\n        }\n      ]\n    },\n    {\n      \"id\": 4,\n    \
+    \  \"type\": \"gauge\",\n      \"title\": \"ZFS used\",\n      \"gridPos\": {\n\
+    \        \"x\": 12,\n        \"y\": 0,\n        \"w\": 12,\n        \"h\": 4\n\
+    \      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\"\
+    : [\n            \"lastNotNull\"\n          ]\n        }\n      },\n      \"fieldConfig\"\
+    : {\n        \"defaults\": {\n          \"unit\": \"percentunit\",\n         \
+    \ \"min\": 0,\n          \"max\": 1,\n          \"thresholds\": {\n          \
+    \  \"mode\": \"absolute\",\n            \"steps\": [\n              {\n      \
+    \          \"color\": \"green\",\n                \"value\": null\n          \
+    \    },\n              {\n                \"color\": \"yellow\",\n           \
+    \     \"value\": 0.8\n              },\n              {\n                \"color\"\
+    : \"red\",\n                \"value\": 0.9\n              }\n            ]\n \
+    \         }\n        }\n      },\n      \"targets\": [\n        {\n          \"\
+    expr\": \"truenas_zfs_used_ratio{job=\\\"truenas-ops\\\"}\",\n          \"legendFormat\"\
+    : \"{{root}}\",\n          \"refId\": \"A\"\n        }\n      ]\n    },\n    {\n\
+    \      \"id\": 5,\n      \"type\": \"timeseries\",\n      \"title\": \"Snapshot-held\
+    \ space\",\n      \"gridPos\": {\n        \"x\": 0,\n        \"y\": 4,\n     \
+    \   \"w\": 12,\n        \"h\": 8\n      },\n      \"fieldConfig\": {\n       \
+    \ \"defaults\": {\n          \"unit\": \"bytes\",\n          \"custom\": {\n \
+    \           \"fillOpacity\": 15\n          }\n        }\n      },\n      \"targets\"\
+    : [\n        {\n          \"expr\": \"truenas_zfs_snapshot_held_bytes{job=\\\"\
+    truenas-ops\\\"}\",\n          \"legendFormat\": \"{{root}}\",\n          \"refId\"\
+    : \"A\"\n        }\n      ]\n    },\n    {\n      \"id\": 6,\n      \"type\":\
+    \ \"timeseries\",\n      \"title\": \"ZFS capacity\",\n      \"gridPos\": {\n\
+    \        \"x\": 12,\n        \"y\": 4,\n        \"w\": 12,\n        \"h\": 8\n\
+    \      },\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\"\
+    : \"bytes\",\n          \"custom\": {\n            \"fillOpacity\": 10\n     \
+    \     }\n        }\n      },\n      \"targets\": [\n        {\n          \"expr\"\
+    : \"truenas_zfs_used_bytes{job=\\\"truenas-ops\\\"}\",\n          \"legendFormat\"\
+    : \"{{root}} used\",\n          \"refId\": \"A\"\n        },\n        {\n    \
+    \      \"expr\": \"truenas_zfs_available_bytes{job=\\\"truenas-ops\\\"}\",\n \
+    \         \"legendFormat\": \"{{root}} available\",\n          \"refId\": \"B\"\
+    \n        }\n      ]\n    },\n    {\n      \"id\": 7,\n      \"type\": \"table\"\
+    ,\n      \"title\": \"GFS task state\",\n      \"gridPos\": {\n        \"x\":\
+    \ 0,\n        \"y\": 12,\n        \"w\": 12,\n        \"h\": 8\n      },\n   \
+    \   \"targets\": [\n        {\n          \"expr\": \"truenas_gfs_task_enabled{job=\\\
+    \"truenas-ops\\\"}\",\n          \"format\": \"table\",\n          \"instant\"\
+    : true,\n          \"refId\": \"A\"\n        }\n      ]\n    },\n    {\n     \
+    \ \"id\": 8,\n      \"type\": \"timeseries\",\n      \"title\": \"Age of newest\
+    \ GFS snapshot\",\n      \"gridPos\": {\n        \"x\": 12,\n        \"y\": 12,\n\
+    \        \"w\": 12,\n        \"h\": 8\n      },\n      \"fieldConfig\": {\n  \
+    \      \"defaults\": {\n          \"unit\": \"s\"\n        }\n      },\n     \
+    \ \"targets\": [\n        {\n          \"expr\": \"time() - truenas_gfs_latest_snapshot_timestamp{job=\\\
+    \"truenas-ops\\\"}\",\n          \"legendFormat\": \"{{root}} {{tier}}\",\n  \
+    \        \"refId\": \"A\"\n        }\n      ]\n    },\n    {\n      \"id\": 9,\n\
+    \      \"type\": \"stat\",\n      \"title\": \"Scrutiny\",\n      \"gridPos\"\
+    : {\n        \"x\": 0,\n        \"y\": 20,\n        \"w\": 4,\n        \"h\":\
+    \ 4\n      },\n      \"options\": {\n        \"reduceOptions\": {\n          \"\
+    calcs\": [\n            \"lastNotNull\"\n          ]\n        },\n        \"colorMode\"\
+    : \"background\"\n      },\n      \"fieldConfig\": {\n        \"defaults\": {\n\
+    \          \"mappings\": [\n            {\n              \"type\": \"value\",\n\
+    \              \"options\": {\n                \"0\": {\n                  \"\
+    text\": \"DOWN\",\n                  \"color\": \"red\"\n                },\n\
+    \                \"1\": {\n                  \"text\": \"UP\",\n             \
+    \     \"color\": \"green\"\n                }\n              }\n            }\n\
+    \          ]\n        }\n      },\n      \"targets\": [\n        {\n         \
+    \ \"expr\": \"truenas_scrutiny_up{job=\\\"truenas-ops\\\"}\",\n          \"refId\"\
+    : \"A\"\n        }\n      ]\n    },\n    {\n      \"id\": 10,\n      \"type\"\
+    : \"stat\",\n      \"title\": \"Disques observés\",\n      \"gridPos\": {\n  \
+    \      \"x\": 4,\n        \"y\": 20,\n        \"w\": 4,\n        \"h\": 4\n  \
+    \    },\n      \"options\": {\n        \"reduceOptions\": {\n          \"calcs\"\
+    : [\n            \"lastNotNull\"\n          ]\n        }\n      },\n      \"fieldConfig\"\
+    : {\n        \"defaults\": {\n          \"unit\": \"none\"\n        }\n      },\n\
+    \      \"targets\": [\n        {\n          \"expr\": \"truenas_scrutiny_disk_count{job=\\\
+    \"truenas-ops\\\"}\",\n          \"refId\": \"A\"\n        }\n      ]\n    },\n\
+    \    {\n      \"id\": 11,\n      \"type\": \"timeseries\",\n      \"title\": \"\
+    Température SMART\",\n      \"gridPos\": {\n        \"x\": 8,\n        \"y\":\
+    \ 20,\n        \"w\": 16,\n        \"h\": 8\n      },\n      \"fieldConfig\":\
+    \ {\n        \"defaults\": {\n          \"unit\": \"celsius\",\n          \"custom\"\
+    : {\n            \"fillOpacity\": 15\n          },\n          \"thresholds\":\
+    \ {\n            \"mode\": \"absolute\",\n            \"steps\": [\n         \
+    \     {\n                \"color\": \"green\",\n                \"value\": null\n\
+    \              },\n              {\n                \"color\": \"yellow\",\n \
+    \               \"value\": 45\n              },\n              {\n           \
+    \     \"color\": \"red\",\n                \"value\": 50\n              }\n  \
+    \          ]\n          }\n        }\n      },\n      \"targets\": [\n       \
+    \ {\n          \"expr\": \"truenas_scrutiny_temperature_celsius{job=\\\"truenas-ops\\\
+    \"}\",\n          \"legendFormat\": \"{{disk}} ({{protocol}})\",\n          \"\
+    refId\": \"A\"\n        }\n      ]\n    },\n    {\n      \"id\": 12,\n      \"\
+    type\": \"table\",\n      \"title\": \"SMART — statut et fraîcheur\",\n      \"\
+    gridPos\": {\n        \"x\": 0,\n        \"y\": 28,\n        \"w\": 24,\n    \
+    \    \"h\": 8\n      },\n      \"targets\": [\n        {\n          \"expr\":\
+    \ \"truenas_scrutiny_disk_status{job=\\\"truenas-ops\\\"}\",\n          \"format\"\
+    : \"table\",\n          \"instant\": true,\n          \"refId\": \"A\"\n     \
+    \   },\n        {\n          \"expr\": \"time() - truenas_scrutiny_last_collection_timestamp{job=\\\
+    \"truenas-ops\\\"}\",\n          \"format\": \"table\",\n          \"instant\"\
+    : true,\n          \"refId\": \"B\"\n        },\n        {\n          \"expr\"\
+    : \"truenas_scrutiny_power_on_hours{job=\\\"truenas-ops\\\"}\",\n          \"\
+    format\": \"table\",\n          \"instant\": true,\n          \"refId\": \"C\"\
+    \n        }\n      ]\n    }\n  ]\n}\n"
