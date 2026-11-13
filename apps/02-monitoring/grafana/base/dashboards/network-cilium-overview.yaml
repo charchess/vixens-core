@@ -2,7 +2,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-dashboard-network-cilium-overview-v2
+  name: grafana-dashboard-network-cilium-overview
+  annotations:
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
   labels:
     grafana_dashboard: "1"
 immutable: true
