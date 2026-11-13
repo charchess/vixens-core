@@ -1,0 +1,53 @@
+---
+# Git-reviewed contract only. This is not a Kubernetes object and does not
+# deploy, query, or export Hubble flow records.
+apiVersion: contracts.vixens.io/v1alpha1
+kind: BoundedDenyTelemetryContract
+metadata:
+  name: cilium-hubble-deny-telemetry
+  issue: "#96"
+spec:
+  purpose: >-
+    Observe Cilium/Hubble denied-flow health through aggregate metrics while
+    preventing durable detailed-flow history.
+  aggregateMetrics:
+    allowed:
+      - name: hubble_flows_processed_total
+        labels:
+          - verdict
+          - direction
+          - protocol
+          - type
+      - name: hubble_drop_total
+        labels:
+          - reason
+          - direction
+          - protocol
+          - type
+    forbiddenLabels:
+      - source
+      - destination
+      - source_namespace
+      - destination_namespace
+      - source_workload
+      - destination_workload
+      - source_pod
+      - destination_pod
+      - source_ip
+      - destination_ip
+      - source_port
+      - destination_port
+  access:
+    aggregateMetricsReader: monitoring/vmagent
+    detailedCorrelationReader: incident-response/on-call
+    detailedCorrelationAccess: break-glass, read-only, time-bounded
+  detailedCorrelationBuffer:
+    medium: memory
+    maximumRetention: 10m
+    durablePersistence: prohibited
+    export: prohibited
+    backup: prohibited
+  prohibitions:
+    - durable detailed-flow persistence
+    - detailed-flow export to Loki or another log store
+    - collection of source or destination identifiers in retained metrics
