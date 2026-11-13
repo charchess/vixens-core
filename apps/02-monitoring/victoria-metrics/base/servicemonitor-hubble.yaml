@@ -18,3 +18,13 @@ spec:
     - port: hubble-metrics
       path: /metrics
       interval: 30s
+      # #96: retain only aggregate deny-health metrics. Drop all endpoint,
+      # workload, IP and port labels before the metrics leave the scrape path.
+      metricRelabelings:
+        - action: keep
+          sourceLabels:
+            - __name__
+          regex: hubble_(flows_processed_total|drop_total)
+        - action: labeldrop
+          regex: >-
+            (source|destination|source_namespace|destination_namespace|source_workload|destination_workload|source_pod|destination_pod|source_ip|destination_ip|source_port|destination_port)
