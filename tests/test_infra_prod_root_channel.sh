@@ -17,3 +17,19 @@ if grep -Eq 'targetRevision: [0-9a-f]{40}$' "$application"; then
 fi
 
 printf 'PASS: infra prod root tracks vixens-infra prod-stable.\n'
+
+# BEGIN MIRA_FABRIC_PROD_ROOT_AUTOSYNC_CONTRACT
+fabric_application="${root}/argocd/overlays/prod/apps/fabric-prod-root.yaml"
+test -f "$fabric_application"
+grep -Fxq '  name: fabric-prod-root' "$fabric_application"
+grep -Fxq '    repoURL: https://github.com/charchess/vixens-fabric.git' "$fabric_application"
+grep -Fxq '    targetRevision: prod-stable' "$fabric_application"
+grep -Fxq '    path: argocd/overlays/prod' "$fabric_application"
+grep -Fxq '  syncPolicy:' "$fabric_application"
+grep -Fxq '    automated: {}' "$fabric_application"
+if grep -Eq '^[[:space:]]*(prune|selfHeal|allowEmpty):' "$fabric_application"; then
+  echo 'fabric-prod-root must not enable prune, selfHeal, or allowEmpty' >&2
+  exit 1
+fi
+printf 'PASS: fabric prod root tracks prod-stable with autosync only.\n'
+# END MIRA_FABRIC_PROD_ROOT_AUTOSYNC_CONTRACT
