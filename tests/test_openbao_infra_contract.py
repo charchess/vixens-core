@@ -55,20 +55,42 @@ if store.count(token_block) != 1:
 for forbidden in ("caProvider:", "openbao-infra-ca", "http://", ":8200", "tlsSkipVerify", "insecure", "fallback", "openbao-fabric"):
     forbid(store, forbidden)
 
-# Global CoreDNS access cannot provide an unrestricted L3/L4 bypass to ESO.
+# The exact complement of ESO controller identity is represented as two positive
+# global DNS selectors: non-ESO namespaces, plus non-controller endpoints in
+# the ESO namespace. This avoids a union-shaped NotIn exclusion.
 forbid(coredns, "endpointSelector: {}")
+forbid(coredns, "operator: NotIn\n        values:\n          - external-secrets\n      - key: io.kubernetes.pod.namespace")
 for required in (
     "name: allow-coredns-egress",
-    "key: app.kubernetes.io/name",
-    "operator: NotIn",
-    "- external-secrets",
-    "key: io.kubernetes.pod.namespace",
+    "specs:",
+    "key: io.kubernetes.pod.namespace\n          operator: NotIn",
+    "matchLabels:\n        io.kubernetes.pod.namespace: external-secrets",
+    "key: app.kubernetes.io/name\n          operator: NotIn",
     "k8s:k8s-app: kube-dns",
     'port: "53"',
 ):
     require(coredns, required)
 if coredns.count("operator: NotIn") != 2:
-    raise AssertionError("CoreDNS exclusion must retain exactly two stable-label exclusions")
+    raise AssertionError("CoreDNS exact-complement contract requires two positive lanes")
+if coredns.count("k8s:k8s-app: kube-dns") != 2:
+    raise AssertionError("each exact-complement lane must retain CoreDNS selection")
+
+# Semantic inventory of the two selectors: only the exact ESO controller pair
+# is absent from global L3/L4 DNS. Webhook, cert-controller, and an app sharing
+# the ESO name in another namespace remain globally selected.
+def global_dns_selected(namespace, app_name):
+    return namespace != "external-secrets" or (
+        namespace == "external-secrets" and app_name != "external-secrets"
+    )
+
+for name, namespace, app_name, expected in (
+    ("eso-controller", "external-secrets", "external-secrets", False),
+    ("eso-webhook", "external-secrets", "external-secrets-webhook", True),
+    ("cert-controller", "cert-manager", "cert-manager", True),
+    ("same-app-other-namespace", "default", "external-secrets", True),
+):
+    if global_dns_selected(namespace, app_name) != expected:
+        raise AssertionError(f"global DNS selector semantics drifted for {name}")
 
 # ESO keeps a private Fabric TCP/8200 selector lane and one bare public FQDN
 # TLS/443 lane. DNS is constrained at L7 to the seven approved resolver names.
