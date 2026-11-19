@@ -1,12 +1,21 @@
 ---
-# Autorise tous les pods à résoudre le DNS via CoreDNS (kube-system)
-# enableDefaultDeny: true = default-deny actif (ingress + egress)
+# Allow CoreDNS only for non-ESO endpoints. ESO's DNS is constrained by its
+# dedicated L7 policy to the approved OpenBao resolver names below.
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
 metadata:
   name: allow-coredns-egress
 spec:
-  endpointSelector: {}
+  endpointSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: NotIn
+        values:
+          - external-secrets
+      - key: io.kubernetes.pod.namespace
+        operator: NotIn
+        values:
+          - external-secrets
   enableDefaultDeny:
     ingress: true
     egress: true
