@@ -1,23 +1,51 @@
 ---
-# Autorise tous les pods à résoudre le DNS via CoreDNS (kube-system)
-# enableDefaultDeny: true = default-deny actif (ingress + egress)
+# Global CoreDNS access is the exact complement of the ESO controller identity:
+# (A) endpoints outside external-secrets, and (B) non-controller endpoints
+# inside external-secrets. The controller's DNS is only its dedicated L7 lane.
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
 metadata:
   name: allow-coredns-egress
-spec:
-  endpointSelector: {}
-  enableDefaultDeny:
-    ingress: true
-    egress: true
-  egress:
-    - toEndpoints:
-        - matchLabels:
-            k8s:io.kubernetes.pod.namespace: kube-system
-            k8s:k8s-app: kube-dns
-      toPorts:
-        - ports:
-            - port: "53"
-              protocol: UDP
-            - port: "53"
-              protocol: TCP
+specs:
+  - endpointSelector:
+      matchExpressions:
+        - key: io.kubernetes.pod.namespace
+          operator: NotIn
+          values:
+            - external-secrets
+    enableDefaultDeny:
+      ingress: true
+      egress: true
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: kube-system
+              k8s:k8s-app: kube-dns
+        toPorts:
+          - ports:
+              - port: "53"
+                protocol: UDP
+              - port: "53"
+                protocol: TCP
+  - endpointSelector:
+      matchLabels:
+        io.kubernetes.pod.namespace: external-secrets
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: NotIn
+          values:
+            - external-secrets
+    enableDefaultDeny:
+      ingress: true
+      egress: true
+    egress:
+      - toEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: kube-system
+              k8s:k8s-app: kube-dns
+        toPorts:
+          - ports:
+              - port: "53"
+                protocol: UDP
+              - port: "53"
+                protocol: TCP
