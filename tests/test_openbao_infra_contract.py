@@ -38,6 +38,23 @@ for required in (
     "key: token",
 ):
     require(store, required)
+# Each reference must appear once in its exact provider block; a token namespace
+# cannot satisfy the CA namespace contract by incidental repetition.
+ca_block = """caProvider:
+        type: ConfigMap
+        name: openbao-infra-ca
+        namespace: external-secrets
+        key: ca.crt"""
+token_block = """tokenSecretRef:
+          namespace: external-secrets
+          name: openbao-token
+          key: token"""
+if store.count("server: https://openbao.truxonline.com") != 1:
+    raise AssertionError("expected exactly one strict Infra server")
+if store.count(ca_block) != 1:
+    raise AssertionError("expected exactly one explicit CA ConfigMap reference")
+if store.count(token_block) != 1:
+    raise AssertionError("expected exactly one preserved token reference")
 for forbidden in ("http://", ":8200", "tlsSkipVerify", "insecure", "fallback", "openbao-fabric"):
     forbid(store, forbidden)
 
@@ -54,6 +71,10 @@ for required in (
     'port: "53"',
 ):
     require(policy, required)
+# This repository's checked-in Cilium policy/schema surface has no supported
+# serverNames field for this egress rule. Do not claim SNI enforcement here:
+# hostname validation remains the ESO TLS/CA responsibility.
+forbid(policy, "serverNames:")
 for forbidden in ("toCIDR:", "toEntities:", "world", "matchPattern:", "*.truxonline.com", "http://", 'port: "8200"\n              protocol: TCP\n        - ports:\n            - port: "443"'):
     forbid(policy, forbidden)
 require(kustomization, "ccnp-allow-external-secrets-openbao.yaml")
