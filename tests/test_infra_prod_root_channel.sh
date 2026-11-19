@@ -43,6 +43,7 @@ base='f629c6ce259bb5715c36ba4e12a751b111e36ebd'
 git -C "$root" cat-file -e "${base}^{commit}"
 mapfile -t changed < <(git -C "$root" diff --name-only "$base" | sort)
 expected=(
+  '.github/workflows/validate.yaml'
   'argocd/overlays/prod/apps/cilium-lb.yaml'
   'tests/test_infra_prod_root_channel.sh'
 )
@@ -52,3 +53,32 @@ if [[ "${changed[*]}" != "${expected[*]}" ]]; then
 fi
 printf 'PASS: core-cilium-lb exact autosync contract and two-file scope.\n'
 # END MIRA_CORE_CILIUM_LB_AUTOSYNC_CONTRACT
+
+# BEGIN MESTRIA_CORE_PR107_FETCH_DEPTH_CONTRACT
+workflow="${root}/.github/workflows/validate.yaml"
+test -f "$workflow"
+python3 - "$root" "$workflow" <<'PY'
+from pathlib import Path
+import subprocess,sys
+root=Path(sys.argv[1]);actual=Path(sys.argv[2]).read_text()
+candidate=subprocess.check_output(['git','-C',str(root),'show','7e5706405a31d5e4666e2bd445d5d241c319d5ae:.github/workflows/validate.yaml'],text=True)
+old="""  infra-prod-root-channel-contract:
+    name: Infra prod root channel contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert Infra production root follows its local channel
+"""
+new="""  infra-prod-root-channel-contract:
+    name: Infra prod root channel contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Assert Infra production root follows its local channel
+"""
+if candidate.count(old)!=1 or actual!=candidate.replace(old,new):raise SystemExit('workflow is not the exact fetch-depth exception')
+PY
+printf 'PASS: PR107 workflow exact fetch-depth exception and three-file scope.\n'
+# END MESTRIA_CORE_PR107_FETCH_DEPTH_CONTRACT

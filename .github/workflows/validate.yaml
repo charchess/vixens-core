@@ -127,6 +127,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Assert Infra production root follows its local channel
         run: bash tests/test_infra_prod_root_channel.sh
 
