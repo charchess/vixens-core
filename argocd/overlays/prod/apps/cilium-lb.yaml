@@ -10,6 +10,8 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
+  syncPolicy:
+    automated: {}
   source:
     repoURL: https://github.com/charchess/vixens-core.git
     targetRevision: prod-stable
