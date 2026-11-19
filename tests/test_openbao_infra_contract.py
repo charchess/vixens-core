@@ -20,42 +20,29 @@ def forbid(text, needle):
     if needle in text:
         raise AssertionError(f"forbidden contract drift: {needle}")
 
-# The shared ClusterSecretStore remains Infra-only and uses TLS with a
-# non-secret ConfigMap CA reference. Its existing token reference is a contract,
-# not a value to be read or changed.
+# The shared ClusterSecretStore relies on the already-authoritative public
+# system trust chain. Its existing token reference is a contract, not a value
+# to be read or changed.
 for required in (
     "name: openbao",
     "server: https://openbao.truxonline.com",
     "path: kv",
     "version: v2",
-    "caProvider:",
-    "type: ConfigMap",
-    "name: openbao-infra-ca",
-    "key: ca.crt",
     "tokenSecretRef:",
     "namespace: external-secrets",
     "name: openbao-token",
     "key: token",
 ):
     require(store, required)
-# Each reference must appear once in its exact provider block; a token namespace
-# cannot satisfy the CA namespace contract by incidental repetition.
-ca_block = """caProvider:
-        type: ConfigMap
-        name: openbao-infra-ca
-        namespace: external-secrets
-        key: ca.crt"""
 token_block = """tokenSecretRef:
           namespace: external-secrets
           name: openbao-token
           key: token"""
 if store.count("server: https://openbao.truxonline.com") != 1:
     raise AssertionError("expected exactly one strict Infra server")
-if store.count(ca_block) != 1:
-    raise AssertionError("expected exactly one explicit CA ConfigMap reference")
 if store.count(token_block) != 1:
     raise AssertionError("expected exactly one preserved token reference")
-for forbidden in ("http://", ":8200", "tlsSkipVerify", "insecure", "fallback", "openbao-fabric"):
+for forbidden in ("caProvider:", "openbao-infra-ca", "http://", ":8200", "tlsSkipVerify", "insecure", "fallback", "openbao-fabric"):
     forbid(store, forbidden)
 
 # ESO keeps its private Fabric endpoint selector on TCP/8200, and adds a
