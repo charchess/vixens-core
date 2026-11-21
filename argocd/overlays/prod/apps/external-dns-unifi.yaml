@@ -27,6 +27,7 @@ spec:
       ref: values
   syncPolicy:
     automated:
+      enabled: true
       prune: true
       selfHeal: true
     syncOptions:
