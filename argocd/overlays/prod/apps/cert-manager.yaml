@@ -33,3 +33,8 @@ spec:
     - repoURL: https://github.com/charchess/vixens-core.git
       targetRevision: prod-stable
       path: apps/00-infra/cert-manager/extra
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true

@@ -22,3 +22,8 @@ spec:
       kind: CustomResourceDefinition
       jsonPointers:
         - /metadata/annotations
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true

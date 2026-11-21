@@ -41,3 +41,8 @@ spec:
       kind: Deployment
       jsonPointers:
         - /spec/template/spec/topologySpreadConstraints
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true

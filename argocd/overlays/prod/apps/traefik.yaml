@@ -31,3 +31,8 @@ spec:
     - repoURL: https://github.com/charchess/vixens-core.git
       targetRevision: prod-stable
       ref: values
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
