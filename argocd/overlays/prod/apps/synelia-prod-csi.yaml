@@ -39,5 +39,9 @@ spec:
       jqPathExpressions:
         - .spec.template.spec.volumes[] | select(.name == "iscsi-dir").hostPath.type
   syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
     syncOptions:
       - RespectIgnoreDifferences=true
