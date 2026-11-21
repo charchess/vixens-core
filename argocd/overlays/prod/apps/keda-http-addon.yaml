@@ -40,7 +40,8 @@ spec:
         - /spec/template/metadata/labels/vixens.io~1sizing.keda-add-ons-http-interceptor
   syncPolicy:
     automated:
+      enabled: true
       prune: true
-      selfHeal: false
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true

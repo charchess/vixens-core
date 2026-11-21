@@ -65,6 +65,7 @@ spec:
     namespace: cnpg-system
   syncPolicy:
     automated:
+      enabled: true
       prune: true
       selfHeal: true
     syncOptions:

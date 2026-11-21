@@ -29,15 +29,18 @@ grep -Fxq '    argocd.argoproj.io/sync-wave: "-2" # Deploy before cilium-config 
 grep -Fxq '    - resources-finalizer.argocd.argoproj.io' "$cilium_lb"
 grep -Fxq '  project: default' "$cilium_lb"
 grep -Fxq '  syncPolicy:' "$cilium_lb"
-grep -Fxq '    automated: {}' "$cilium_lb"
+grep -Fxq '    automated:' "$cilium_lb"
+grep -Fxq '      enabled: true' "$cilium_lb"
+grep -Fxq '      prune: true' "$cilium_lb"
+grep -Fxq '      selfHeal: true' "$cilium_lb"
 grep -Fxq '    repoURL: https://github.com/charchess/vixens-core.git' "$cilium_lb"
 grep -Fxq '    targetRevision: prod-stable' "$cilium_lb"
 grep -Fxq '    path: apps/00-infra/cilium-lb/overlays/prod' "$cilium_lb"
 grep -Fxq '    server: https://kubernetes.default.svc' "$cilium_lb"
 grep -Fxq '    namespace: kube-system' "$cilium_lb"
 
-if grep -Eq '^[[:space:]]*(prune|selfHeal|allowEmpty|syncOptions|retry|hooks|force|replace):|argocd\.argoproj\.io/hook' "$cilium_lb"; then
-  echo 'core-cilium-lb must not extend automated sync with destructive or hook options' >&2
+if grep -Eq '^[[:space:]]*(allowEmpty|syncOptions|retry|hooks|force|replace):|argocd\.argoproj\.io/hook' "$cilium_lb"; then
+  echo 'core-cilium-lb must not extend the mandatory production sync policy with extra destructive or hook options' >&2
   exit 1
 fi
 

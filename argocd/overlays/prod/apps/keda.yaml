@@ -42,7 +42,8 @@ spec:
         - .metadata.annotations["vixens.io/sizing-rationale"]
   syncPolicy:
     automated:
+      enabled: true
       prune: true
-      selfHeal: false
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true

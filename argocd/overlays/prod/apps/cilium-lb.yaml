@@ -11,7 +11,10 @@ metadata:
 spec:
   project: default
   syncPolicy:
-    automated: {}
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
   source:
     repoURL: https://github.com/charchess/vixens-core.git
     targetRevision: prod-stable
