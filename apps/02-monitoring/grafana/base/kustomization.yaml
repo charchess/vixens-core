@@ -12,6 +12,7 @@ resources:
   - dashboards/container-image-versions.yaml
   - dashboards/network-cilium-overview.yaml
   - dashboards/argocd.yaml
+  - dashboards/vixens-command-center.yaml
   - dashboards/cert-manager.yaml
   - dashboards/unifi-snmp.yaml
   - dashboards/unifi-udm-resources.yaml
