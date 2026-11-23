@@ -1,0 +1,623 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-vixens-command-center
+  labels:
+    grafana_dashboard: "1"
+immutable: true
+data:
+  vixens-command-center.json: |
+    {
+      "annotations": {
+        "list": []
+      },
+      "description": "Vixens operational front door. Live-verified VictoriaMetrics signals at the top; detailed dashboards below.",
+      "editable": true,
+      "schemaVersion": 39,
+      "refresh": "30s",
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timezone": "browser",
+      "title": "Vixens Command Center",
+      "uid": "vixens-command-center",
+      "tags": [
+        "vixens",
+        "overview",
+        "operations",
+        "drilldown"
+      ],
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "label": "Metrics",
+            "type": "datasource",
+            "query": "prometheus",
+            "current": {},
+            "hide": 0,
+            "includeAll": false,
+            "multi": false,
+            "options": [],
+            "refresh": 1
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Firing alerts",
+          "description": "Current firing alert instances.",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 4,
+            "h": 5
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "expr": "sum(ALERTS{alertstate=\"firing\"}) or vector(0)",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 5
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Scrape targets",
+          "description": "Targets currently known to VictoriaMetrics.",
+          "gridPos": {
+            "x": 4,
+            "y": 0,
+            "w": 4,
+            "h": 5
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "expr": "count(up)",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Scrape failures",
+          "description": "Targets reporting up=0.",
+          "gridPos": {
+            "x": 8,
+            "y": 0,
+            "w": 4,
+            "h": 5
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "expr": "count(up == 0)",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "Policy denied / 5m",
+          "description": "Cilium policy denials.",
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 4,
+            "h": 5
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "expr": "sum(increase(hubble_drop_total{reason=\"POLICY_DENIED\"}[5m])) or vector(0)",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 20
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 5,
+          "type": "stat",
+          "title": "Hubble lost events / 1h",
+          "description": "Non-zero means incomplete network telemetry.",
+          "gridPos": {
+            "x": 16,
+            "y": 0,
+            "w": 4,
+            "h": 5
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "expr": "sum(increase(hubble_lost_events_total[1h])) or vector(0)",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 6,
+          "type": "stat",
+          "title": "Flow drops / s",
+          "description": "All observed Hubble drops.",
+          "gridPos": {
+            "x": 20,
+            "y": 0,
+            "w": 4,
+            "h": 5
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(hubble_drop_total[5m])) or vector(0)",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 0.1
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 10,
+          "type": "table",
+          "title": "Telemetry coverage \u2014 scrape jobs",
+          "description": "Only collected domains can claim a live state. Missing metrics are intentionally not shown as healthy.",
+          "gridPos": {
+            "x": 0,
+            "y": 5,
+            "w": 12,
+            "h": 10
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "expr": "sum by (job) (up)",
+              "format": "table",
+              "instant": true,
+              "refId": "A"
+            },
+            {
+              "expr": "count by (job) (up)",
+              "format": "table",
+              "instant": true,
+              "refId": "B"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "joinByField",
+              "options": {
+                "byField": "job",
+                "mode": "outer"
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true
+                },
+                "renameByName": {
+                  "Value #A": "Healthy targets",
+                  "Value #B": "Known targets",
+                  "job": "Job"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true
+          }
+        },
+        {
+          "id": 11,
+          "type": "table",
+          "title": "Firing alerts \u2014 immediate triage",
+          "description": "Live active alerts. Follow the domain drill-down after identifying the owner.",
+          "gridPos": {
+            "x": 12,
+            "y": 5,
+            "w": 12,
+            "h": 10
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "expr": "ALERTS{alertstate=\"firing\"}",
+              "format": "table",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "instance": true,
+                  "job": true,
+                  "alertstate": true
+                },
+                "renameByName": {
+                  "alertname": "Alert",
+                  "severity": "Severity",
+                  "namespace": "Namespace",
+                  "pod": "Pod",
+                  "Value": "Active"
+                }
+              }
+            }
+          ],
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true
+          }
+        },
+        {
+          "id": 20,
+          "type": "text",
+          "title": "Domain drill-downs",
+          "gridPos": {
+            "x": 0,
+            "y": 15,
+            "w": 24,
+            "h": 8
+          },
+          "options": {
+            "mode": "markdown",
+            "content": "### Drill-down catalogue\n\n**Platform** \u2014 [Kubernetes global](/d/k8s_views_global) \u00b7 [nodes](/d/talos-nodes-overview-vixens) \u00b7 [namespaces](/d/k8s_views_ns) \u00b7 [pods](/d/k8s_views_pods) \u00b7 [Alertmanager](/d/alertmanager-overview)\n\n**Delivery & security** \u2014 [ArgoCD](/d/argocd-overview) \u00b7 [Cert-Manager](/d/cert-manager-overview) \u00b7 [Trivy security](/d/trivy-operator-security) \u00b7 [vulnerability explorer](/d/trivy-vulnerability-explorer)\n\n**Network & storage** \u2014 [Cilium / Hubble](/d/network-cilium-overview) \u00b7 [UniFi](/d/unifi-snmp-vixens) \u00b7 [UDM resources](/d/unifi-udm-resources-vixens) \u00b7 [TrueNAS](/d/truenas-ops-vixens)\n\n**Service operations** \u2014 [container inventory](/d/container-image-versions) \u00b7 [mail import](/d/mail-import-overview)\n\n> **Coverage rule:** *No data* means an observability gap, never a healthy state. Start with the telemetry-coverage table before trusting a detail dashboard."
+          }
+        },
+        {
+          "id": 30,
+          "type": "timeseries",
+          "title": "Observed flow verdicts",
+          "gridPos": {
+            "x": 0,
+            "y": 23,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "expr": "sum by (verdict) (rate(hubble_flows_processed_total[5m]))",
+              "legendFormat": "{{verdict}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "lineWidth": 2
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "id": 31,
+          "type": "timeseries",
+          "title": "Flow drops by reason",
+          "gridPos": {
+            "x": 12,
+            "y": 23,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "targets": [
+            {
+              "expr": "sum by (reason) (rate(hubble_drop_total[5m]))",
+              "legendFormat": "{{reason}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": {
+                "fillOpacity": 8,
+                "lineWidth": 2
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        }
+      ]
+    }
