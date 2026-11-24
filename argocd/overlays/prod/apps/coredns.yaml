@@ -7,8 +7,8 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
   annotations:
-    # CoreDNS resolves AdGuard through the Kubernetes Service FQDN.
-    # Apply only after AdGuard Home (wave 5) is healthy.
+    # CoreDNS forwards public DNS to canonical TrueNAS AdGuard.
+    # Apply only after the resolver has been verified healthy.
     argocd.argoproj.io/sync-wave: "6"
 spec:
   project: default
