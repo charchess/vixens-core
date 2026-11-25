@@ -19,7 +19,7 @@ grep -Fq 'value: iscsi-dir' "${policy_rendered}"
 grep -Fq 'type: ""' "${policy_rendered}"
 
 grep -Fq 'name: core-synelia-prod-csi' "${prod_rendered}"
-grep -Fq '.spec.template.spec.volumes[] | select(.name == "iscsi-dir").hostPath.type' "${prod_rendered}"
+grep -Fq '.spec.template.spec.volumes[] | select(.name == "iscsi-dir")' "${prod_rendered}"
 grep -Fq 'RespectIgnoreDifferences=true' "${prod_rendered}"
 
 printf 'PASS: TrueNAS CSI hostPath mutation is scoped and Argo-aware.\n'

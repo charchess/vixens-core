@@ -18,10 +18,10 @@ On Talos, Kyverno removes `hostPath.type` for this one volume. Ignoring only the
 
 ## Canonical mitigation
 
-The production Application ignores the **`hostPath` object only for the volume named `iscsi-dir`**:
+The production Application ignores the **complete named `iscsi-dir` volume only**: this contains the Kyverno-mutated hostPath and avoids Kubernetes list-item reordering drift while every other volume remains tracked.
 
 ```yaml
-.spec.template.spec.volumes[] | select(.name == "iscsi-dir").hostPath
+.spec.template.spec.volumes[] | select(.name == "iscsi-dir")
 ```
 
 Do not widen this to all volumes, the whole DaemonSet, or a manager-wide ignore. The fixed path `/etc/iscsi` and the volume-name selector retain the intended boundary.
