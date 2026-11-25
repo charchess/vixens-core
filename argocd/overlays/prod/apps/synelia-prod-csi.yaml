@@ -29,15 +29,16 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: synelia-prod-csi
-  # Kyverno omits the chart's hostPath.type on the named iscsi-dir volume;
-  # ignore that bounded hostPath object so Argo does not auto-heal it forever.
+  # Kyverno mutates the named iscsi-dir volume and Kubernetes can reorder that
+  # one list item. Ignore only that complete named volume so Argo does not
+  # self-heal a harmless ordering/mutation drift; every other volume remains tracked.
   ignoreDifferences:
     - group: apps
       kind: DaemonSet
       namespace: synelia-prod-csi
       name: synelia-prod-csi-node
       jqPathExpressions:
-        - .spec.template.spec.volumes[] | select(.name == "iscsi-dir").hostPath
+        - .spec.template.spec.volumes[] | select(.name == "iscsi-dir")
   syncPolicy:
     automated:
       enabled: true
